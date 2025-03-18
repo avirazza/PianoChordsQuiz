@@ -18,9 +18,13 @@ export default function Game() {
   const [showFeedback, setShowFeedback] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState("");
+  
+  // Keep track of recently used chord indices and types (to prevent repetitive chords)
+  const [recentChordIndices, setRecentChordIndices] = useState<number[]>([]);
+  const [recentChordTypes, setRecentChordTypes] = useState<string[]>([]);
 
   // Fetch chords based on selected difficulty
-  const { data: chords, isLoading, isError } = useQuery({
+  const { data: chords, isLoading } = useQuery({
     queryKey: ['/api/chords', difficulty],
     queryFn: () => fetch(`/api/chords/${difficulty}`).then(res => res.json()),
   });
@@ -32,107 +36,6 @@ export default function Game() {
     toggleNoteSelection,
     playChord,
   } = usePiano();
-
-  // Function to handle playing the current chord
-  const handlePlayChord = useCallback(() => {
-    if (currentChord) {
-      // Always play original reference chord
-      playChord(currentChord.notes);
-      
-      // Provide visual feedback by highlighting the correct notes
-      // This doesn't force the user to use the same octave
-      clearSelectedNotes();
-      
-      // Briefly show the reference chord notes
-      setTimeout(() => {
-        // Clear the highlight after a short delay
-        clearSelectedNotes();
-      }, 1000);
-    }
-  }, [currentChord, playChord, clearSelectedNotes]);
-  
-  // Submit the user's answer
-  const handleSubmit = useCallback(() => {
-    if (!currentChord) return;
-    
-    // Use the checkChordMatch function from the chords library
-    // This handles the mathematical approach to chord matching
-    const correct = checkChordMatch(selectedNotes, currentChord.notes);
-    
-    setIsCorrect(correct);
-    setShowFeedback(true);
-    
-    if (correct) {
-      setFeedbackMessage("Correct! Well done!");
-      setScore(prevScore => prevScore + 10);
-      
-      // Submit score to the backend
-      apiRequest("POST", "/api/game-sessions", {
-        score: score + 10,
-        difficulty,
-        completedAt: new Date().toISOString()
-      });
-      
-      // Generate new chord after delay
-      setTimeout(generateNewChord, 1500);
-    } else {
-      setFeedbackMessage("Not quite right. Try again!");
-      
-      // Clear feedback after delay
-      setTimeout(() => {
-        setShowFeedback(false);
-      }, 2000);
-    }
-  }, [currentChord, selectedNotes, score, difficulty, generateNewChord]);
-
-  // Initialize Tone.js when the component mounts
-  useEffect(() => {
-    // Initialize Tone.js on first user interaction (required by browsers)
-    const handleFirstInteraction = () => {
-      if (Tone.context.state !== "running") {
-        console.log("Starting Tone.js audio context...");
-        Tone.start();
-        document.removeEventListener("click", handleFirstInteraction);
-        document.removeEventListener("keydown", handleFirstInteraction);
-      }
-    };
-    
-    document.addEventListener("click", handleFirstInteraction);
-    document.addEventListener("keydown", handleFirstInteraction);
-    
-    // Add keyboard shortcuts
-    const handleKeydown = (event: KeyboardEvent) => {
-      // Only handle keypresses if not in an input field
-      if (event.target instanceof HTMLInputElement || 
-          event.target instanceof HTMLTextAreaElement) {
-        return;
-      }
-      
-      switch (event.key) {
-        case 'Enter':
-          // Submit answer with Enter key
-          handleSubmit();
-          break;
-        case ' ': // Space key
-          // Play chord with Space key
-          event.preventDefault(); // Prevent page scrolling
-          handlePlayChord();
-          break;
-        case 'Backspace':
-          // Clear selected notes with Backspace key
-          clearSelectedNotes();
-          break;
-      }
-    };
-    
-    document.addEventListener('keydown', handleKeydown);
-    
-    return () => {
-      document.removeEventListener("click", handleFirstInteraction);
-      document.removeEventListener("keydown", handleFirstInteraction);
-      document.removeEventListener('keydown', handleKeydown);
-    };
-  }, [handleSubmit, handlePlayChord, clearSelectedNotes]);
 
   // Set a random chord when difficulty changes or when chords load
   useEffect(() => {
@@ -146,11 +49,7 @@ export default function Game() {
   const currentChord: ChordData | undefined = chords && chords.length > 0 
     ? chords[currentChordIndex] 
     : undefined;
-
-  // Keep track of recently used chord indices and types (to prevent repetitive chords)
-  const [recentChordIndices, setRecentChordIndices] = useState<number[]>([]);
-  const [recentChordTypes, setRecentChordTypes] = useState<string[]>([]);
-  
+    
   // Generate a new random chord - avoid repeating recent chords
   const generateNewChord = useCallback(() => {
     if (chords && chords.length > 0) {
@@ -229,7 +128,106 @@ export default function Game() {
     }
   }, [chords, recentChordIndices, recentChordTypes, clearSelectedNotes]);
 
-  // These functions are defined with useCallback above
+  // Function to handle playing the current chord
+  const handlePlayChord = useCallback(() => {
+    if (currentChord) {
+      // Always play original reference chord
+      playChord(currentChord.notes);
+      
+      // Provide visual feedback by highlighting the correct notes
+      // This doesn't force the user to use the same octave
+      clearSelectedNotes();
+      
+      // Briefly show the reference chord notes
+      setTimeout(() => {
+        // Clear the highlight after a short delay
+        clearSelectedNotes();
+      }, 1000);
+    }
+  }, [currentChord, playChord, clearSelectedNotes]);
+  
+  // Submit the user's answer
+  const handleSubmit = useCallback(() => {
+    if (!currentChord) return;
+    
+    // Use the checkChordMatch function from the chords library
+    // This handles the mathematical approach to chord matching
+    const correct = checkChordMatch(selectedNotes, currentChord.notes);
+    
+    setIsCorrect(correct);
+    setShowFeedback(true);
+    
+    if (correct) {
+      setFeedbackMessage("Correct! Well done!");
+      setScore(prevScore => prevScore + 10);
+      
+      // Submit score to the backend
+      apiRequest("POST", "/api/game-sessions", {
+        score: score + 10,
+        difficulty,
+        completedAt: new Date().toISOString()
+      });
+      
+      // Generate new chord after delay
+      setTimeout(generateNewChord, 1500);
+    } else {
+      setFeedbackMessage("Not quite right. Try again!");
+      
+      // Clear feedback after delay
+      setTimeout(() => {
+        setShowFeedback(false);
+      }, 2000);
+    }
+  }, [currentChord, selectedNotes, score, difficulty, generateNewChord]);
+
+  // Initialize Tone.js and handle keyboard shortcuts 
+  useEffect(() => {
+    // Initialize Tone.js on first user interaction (required by browsers)
+    const handleFirstInteraction = () => {
+      if (Tone.context.state !== "running") {
+        console.log("Starting Tone.js audio context...");
+        Tone.start();
+        document.removeEventListener("click", handleFirstInteraction);
+        document.removeEventListener("keydown", handleFirstInteraction);
+      }
+    };
+    
+    document.addEventListener("click", handleFirstInteraction);
+    document.addEventListener("keydown", handleFirstInteraction);
+    
+    // Add keyboard shortcuts
+    const handleKeydown = (event: KeyboardEvent) => {
+      // Only handle keypresses if not in an input field
+      if (event.target instanceof HTMLInputElement || 
+          event.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+      
+      switch (event.key) {
+        case 'Enter':
+          // Submit answer with Enter key
+          handleSubmit();
+          break;
+        case ' ': // Space key
+          // Play chord with Space key
+          event.preventDefault(); // Prevent page scrolling
+          handlePlayChord();
+          break;
+        case 'Backspace':
+          // Clear selected notes with Backspace key
+          clearSelectedNotes();
+          break;
+      }
+    };
+    
+    document.addEventListener('keydown', handleKeydown);
+    
+    return () => {
+      document.removeEventListener("click", handleFirstInteraction);
+      document.removeEventListener("keydown", handleFirstInteraction);
+      document.removeEventListener('keydown', handleKeydown);
+    };
+  }, [handleSubmit, handlePlayChord, clearSelectedNotes]);
 
   return (
     <div className="bg-neutral-light min-h-screen font-inter text-neutral-dark">

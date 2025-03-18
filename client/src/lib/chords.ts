@@ -86,7 +86,7 @@ export const chordPatterns: ChordPattern[] = [
 function generateChordName(pattern: ChordPattern, rootNum: number): string {
   const rootName = getRootName(rootNum);
   
-  // For inversions, show as "ROOT CHORD-TYPE INV-TYPE" format
+  // For inversions, use "1st inv" and "2nd inv" notation
   if (pattern.inversion > 0) {
     // First inversion
     if (pattern.inversion === 1) {
@@ -188,8 +188,10 @@ const rootsLevel1 = [1, 6, 8, 10]; // C, F, G, A (plus D, E for minors)
 const rootsLevel2 = [2, 3, 4, 5, 7, 9, 11, 12]; // C#, D, Eb, E, F#, Ab, Bb, B
 const rootsLevel3 = [1, 3, 5, 6, 8, 10]; // C, D, E, F, G, A (white keys)
 const rootsLevel4 = [2, 4, 7, 9, 11]; // C#, Eb, F#, Ab, Bb (black keys)
-const rootsLevel5 = [1, 3, 5, 6, 8, 10]; // C, D, E, F, G, A
-const rootsLevel6 = [1, 3, 5, 6, 8, 10]; // C, D, E, F, G, A
+// For inversions, use all 12 notes
+const allRoots = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]; // All 12 notes (C through B)
+const rootsLevel5 = allRoots; // All 12 roots for level 5
+const rootsLevel6 = allRoots; // All 12 roots for level 6
 const rootsLevel7 = [1, 3, 6, 8, 10]; // C, D, F, G, A
 
 // Create a map to hold chord definitions by difficulty
