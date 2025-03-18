@@ -101,7 +101,7 @@ export function getRootName(rootNum: number): string {
 
 // Define the chord patterns (types) independently of root notes
 export const chordPatterns: ChordPattern[] = [
-  // Root position chords
+  // Root position chords - triads
   { type: "major", display: "", intervals: [0, 4, 7], inversion: 0 },
   { type: "minor", display: "m", intervals: [0, 3, 7], inversion: 0 },
   { type: "augmented", display: "aug", intervals: [0, 4, 8], inversion: 0 },
@@ -109,7 +109,7 @@ export const chordPatterns: ChordPattern[] = [
   { type: "sus2", display: "sus2", intervals: [0, 2, 7], inversion: 0 },
   { type: "sus4", display: "sus4", intervals: [0, 5, 7], inversion: 0 },
 
-  // First inversions
+  // First inversions - triads
   {
     type: "major",
     display: "",
@@ -139,7 +139,7 @@ export const chordPatterns: ChordPattern[] = [
     inversionDisplay: "1st inv",
   },
 
-  // Second inversions
+  // Second inversions - triads
   {
     type: "major",
     display: "",
@@ -168,6 +168,212 @@ export const chordPatterns: ChordPattern[] = [
     inversion: 2,
     inversionDisplay: "2nd inv",
   },
+  
+  // Root position - 7th chords
+  { type: "dominant7", display: "7", intervals: [0, 4, 7, 10], inversion: 0 },
+  { type: "major7", display: "maj7", intervals: [0, 4, 7, 11], inversion: 0 },
+  { type: "minor7", display: "m7", intervals: [0, 3, 7, 10], inversion: 0 },
+  { type: "minorMajor7", display: "mMaj7", intervals: [0, 3, 7, 11], inversion: 0 },
+  { type: "diminished7", display: "dim7", intervals: [0, 3, 6, 9], inversion: 0 },
+  { type: "halfdiminished7", display: "m7b5", intervals: [0, 3, 6, 10], inversion: 0 },
+  { type: "diminishedMajor7", display: "dimMaj7", intervals: [0, 3, 6, 11], inversion: 0 },
+  { type: "augmentedMinor7", display: "aug7", intervals: [0, 4, 8, 10], inversion: 0 },
+  { type: "augmentedMajor7", display: "augMaj7", intervals: [0, 4, 8, 11], inversion: 0 },
+  
+  // First inversion - 7th chords
+  { 
+    type: "dominant7", 
+    display: "7", 
+    intervals: [-2, 0, 3, 6], 
+    inversion: 1,
+    inversionDisplay: "1st inv",
+  },
+  { 
+    type: "major7", 
+    display: "maj7", 
+    intervals: [-1, 0, 3, 7], 
+    inversion: 1,
+    inversionDisplay: "1st inv",
+  },
+  { 
+    type: "minor7", 
+    display: "m7", 
+    intervals: [-2, 0, 4, 7], 
+    inversion: 1,
+    inversionDisplay: "1st inv",
+  },
+  { 
+    type: "minorMajor7", 
+    display: "mMaj7", 
+    intervals: [-1, 0, 4, 8], 
+    inversion: 1,
+    inversionDisplay: "1st inv",
+  },
+  { 
+    type: "diminished7", 
+    display: "dim7", 
+    intervals: [-3, 0, 3, 6], 
+    inversion: 1,
+    inversionDisplay: "1st inv",
+  },
+  { 
+    type: "halfdiminished7", 
+    display: "m7b5", 
+    intervals: [-2, 0, 3, 7], 
+    inversion: 1,
+    inversionDisplay: "1st inv",
+  },
+  { 
+    type: "diminishedMajor7", 
+    display: "dimMaj7", 
+    intervals: [-1, 0, 3, 8], 
+    inversion: 1,
+    inversionDisplay: "1st inv",
+  },
+  { 
+    type: "augmentedMinor7", 
+    display: "aug7", 
+    intervals: [-2, 0, 4, 6], 
+    inversion: 1,
+    inversionDisplay: "1st inv",
+  },
+  { 
+    type: "augmentedMajor7", 
+    display: "augMaj7", 
+    intervals: [-1, 0, 4, 7], 
+    inversion: 1,
+    inversionDisplay: "1st inv",
+  },
+  
+  // Second inversion - 7th chords
+  { 
+    type: "dominant7", 
+    display: "7", 
+    intervals: [-4, -1, 0, 3], 
+    inversion: 2,
+    inversionDisplay: "2nd inv",
+  },
+  { 
+    type: "major7", 
+    display: "maj7", 
+    intervals: [-5, -1, 0, 4], 
+    inversion: 2,
+    inversionDisplay: "2nd inv",
+  },
+  { 
+    type: "minor7", 
+    display: "m7", 
+    intervals: [-5, -1, 0, 3], 
+    inversion: 2,
+    inversionDisplay: "2nd inv",
+  },
+  { 
+    type: "minorMajor7", 
+    display: "mMaj7", 
+    intervals: [-4, 0, 1, 4], 
+    inversion: 2,
+    inversionDisplay: "2nd inv",
+  },
+  { 
+    type: "diminished7", 
+    display: "dim7", 
+    intervals: [-3, 0, 3, 6], 
+    inversion: 2,
+    inversionDisplay: "2nd inv",
+  },
+  { 
+    type: "halfdiminished7", 
+    display: "m7b5", 
+    intervals: [-4, 0, 2, 7], 
+    inversion: 2,
+    inversionDisplay: "2nd inv",
+  },
+  { 
+    type: "diminishedMajor7", 
+    display: "dimMaj7", 
+    intervals: [-3, 0, 2, 5], 
+    inversion: 2,
+    inversionDisplay: "2nd inv",
+  },
+  { 
+    type: "augmentedMinor7", 
+    display: "aug7", 
+    intervals: [-4, 0, 2, 6], 
+    inversion: 2,
+    inversionDisplay: "2nd inv",
+  },
+  { 
+    type: "augmentedMajor7", 
+    display: "augMaj7", 
+    intervals: [-4, 0, 1, 5], 
+    inversion: 2,
+    inversionDisplay: "2nd inv",
+  },
+  
+  // Third inversion - 7th chords 
+  { 
+    type: "dominant7", 
+    display: "7", 
+    intervals: [-7, -4, -1, 0], 
+    inversion: 3,
+    inversionDisplay: "3rd inv",
+  },
+  { 
+    type: "major7", 
+    display: "maj7", 
+    intervals: [-8, -5, -1, 0], 
+    inversion: 3,
+    inversionDisplay: "3rd inv",
+  },
+  { 
+    type: "minor7", 
+    display: "m7", 
+    intervals: [-7, -4, -1, 0], 
+    inversion: 3,
+    inversionDisplay: "3rd inv",
+  },
+  { 
+    type: "minorMajor7", 
+    display: "mMaj7", 
+    intervals: [-8, -4, -1, 0], 
+    inversion: 3,
+    inversionDisplay: "3rd inv",
+  },
+  { 
+    type: "diminished7", 
+    display: "dim7", 
+    intervals: [-3, 0, 3, 6], 
+    inversion: 3,
+    inversionDisplay: "3rd inv",
+  },
+  { 
+    type: "halfdiminished7", 
+    display: "m7b5", 
+    intervals: [-7, -3, 0, 3], 
+    inversion: 3,
+    inversionDisplay: "3rd inv",
+  },
+  { 
+    type: "diminishedMajor7", 
+    display: "dimMaj7", 
+    intervals: [-8, -4, -1, 0], 
+    inversion: 3,
+    inversionDisplay: "3rd inv",
+  },
+  { 
+    type: "augmentedMinor7", 
+    display: "aug7", 
+    intervals: [-6, -2, 0, 4], 
+    inversion: 3,
+    inversionDisplay: "3rd inv",
+  },
+  { 
+    type: "augmentedMajor7", 
+    display: "augMaj7", 
+    intervals: [-7, -3, 0, 4], 
+    inversion: 3,
+    inversionDisplay: "3rd inv",
+  }
 ];
 
 // CHORD GENERATION FUNCTIONS
@@ -300,6 +506,8 @@ const chordsByDifficulty: Record<DifficultyLevel, ChordDefinition[]> = {
   level5: [],
   level6: [],
   level7: [],
+  level8: [],
+  level9: [],
 };
 
 // Level 1: Major/Minor Triads (root position only)
@@ -488,8 +696,13 @@ const patternsByTypeAndInversion: Record<string, Record<number, ChordPattern>> =
 
 // Helper to organize the patterns
 function organizePatterns() {
-  // Initialize the nested structure
-  ["major", "minor", "augmented", "diminished", "sus2", "sus4"].forEach(type => {
+  // Initialize the nested structure for all chord types
+  [
+    "major", "minor", "augmented", "diminished", "sus2", "sus4",
+    "dominant7", "major7", "minor7", "minorMajor7", 
+    "diminished7", "halfdiminished7", "diminishedMajor7", 
+    "augmentedMinor7", "augmentedMajor7"
+  ].forEach(type => {
     patternsByTypeAndInversion[type] = {};
   });
   
@@ -507,10 +720,12 @@ organizePatterns();
 
 // List of all chord types we want to include
 const allChordTypes = ["major", "minor", "augmented", "diminished", "sus2", "sus4"];
+const basic7thChordTypes = ["dominant7", "major7", "minor7", "minorMajor7"];
+const exotic7thChordTypes = ["diminished7", "halfdiminished7", "diminishedMajor7", "augmentedMinor7", "augmentedMajor7"];
 
-// Generate ALL combinations for level 7
+// Level 7: All non-7th chords (triads) and their inversions
 allRoots.forEach(rootNum => {
-  // For each root note, iterate through all chord types
+  // For each root note, iterate through all triad chord types
   allChordTypes.forEach(chordType => {
     // Get all available inversions for this chord type
     const inversions = Object.keys(patternsByTypeAndInversion[chordType]).map(Number);
@@ -524,6 +739,40 @@ allRoots.forEach(rootNum => {
         );
       }
     });
+  });
+});
+
+// Level 8: Basic 7th chords - dominant7, major7, minor7, and minorMajor7
+[1, 6, 8, 10, 3, 5].forEach(rootNum => { // C, F, G, A, D, E
+  // For each root note, iterate through basic 7th chord types
+  basic7thChordTypes.forEach(chordType => {
+    // Include all inversions (0, 1, 2, 3)
+    for (let inversion = 0; inversion <= 3; inversion++) {
+      // Find the pattern for this chord type and inversion
+      const pattern = chordPatterns.find(p => p.type === chordType && p.inversion === inversion);
+      if (pattern) {
+        chordsByDifficulty["level8"].push(
+          createChordDef(rootNum, pattern, idCounter++, "level8")
+        );
+      }
+    }
+  });
+});
+
+// Level 9: Exotic 7th chords - all augmented and diminished 7th variants
+[1, 6, 8, 10, 3, 5].forEach(rootNum => { // C, F, G, A, D, E
+  // For each root note, iterate through exotic 7th chord types
+  exotic7thChordTypes.forEach(chordType => {
+    // Include all inversions (0, 1, 2, 3)
+    for (let inversion = 0; inversion <= 3; inversion++) {
+      // Find the pattern for this chord type and inversion
+      const pattern = chordPatterns.find(p => p.type === chordType && p.inversion === inversion);
+      if (pattern) {
+        chordsByDifficulty["level9"].push(
+          createChordDef(rootNum, pattern, idCounter++, "level9")
+        );
+      }
+    }
   });
 });
 

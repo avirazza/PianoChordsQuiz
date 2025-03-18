@@ -482,13 +482,62 @@ export function getChordsForDifficulty(
       break;
 
     case "level7":
-      // Level 7: ALL possible combinations
+      // Level 7: All non-7th chords and their inversions
       allRoots.forEach((rootNum) => {
-        chordPatterns.forEach((pattern) => {
+        // Filter for non-7th chord patterns
+        const triadPatterns = chordPatterns.filter((p) => 
+          ["major", "minor", "diminished", "augmented", "sus2", "sus4"].includes(p.type)
+        );
+
+        triadPatterns.forEach((pattern) => {
           chords.push(
             createChordDefinition(rootNum, pattern, id++, difficulty),
           );
         });
+      });
+      break;
+      
+    case "level8":
+      // Level 8: Basic 7th chords - dominant7, major7, minor7, and minorMajor7
+      [1, 6, 8, 10, 3, 5].forEach((rootNum) => { // C, F, G, A, D, E
+        // Find the relevant 7th chord patterns
+        const dom7Pattern = chordPatterns.find((p) => p.type === "dominant7" && p.inversion === 0);
+        const maj7Pattern = chordPatterns.find((p) => p.type === "major7" && p.inversion === 0);
+        const min7Pattern = chordPatterns.find((p) => p.type === "minor7" && p.inversion === 0);
+        const minMaj7Pattern = chordPatterns.find((p) => p.type === "minorMajor7" && p.inversion === 0);
+        
+        // Add each chord type with its inversions
+        for (let inv = 0; inv <= 3; inv++) {
+          const dom7Inv = chordPatterns.find((p) => p.type === "dominant7" && p.inversion === inv);
+          const maj7Inv = chordPatterns.find((p) => p.type === "major7" && p.inversion === inv);
+          const min7Inv = chordPatterns.find((p) => p.type === "minor7" && p.inversion === inv);
+          const minMaj7Inv = chordPatterns.find((p) => p.type === "minorMajor7" && p.inversion === inv);
+          
+          if (dom7Inv) chords.push(createChordDefinition(rootNum, dom7Inv, id++, difficulty));
+          if (maj7Inv) chords.push(createChordDefinition(rootNum, maj7Inv, id++, difficulty));
+          if (min7Inv) chords.push(createChordDefinition(rootNum, min7Inv, id++, difficulty));
+          if (minMaj7Inv) chords.push(createChordDefinition(rootNum, minMaj7Inv, id++, difficulty));
+        }
+      });
+      break;
+      
+    case "level9":
+      // Level 9: Advanced 7th chords - all augmented and diminished 7th chords
+      [1, 6, 8, 10, 3, 5].forEach((rootNum) => { // C, F, G, A, D, E
+        // Find the exotic 7th chord patterns with all inversions
+        for (let inv = 0; inv <= 3; inv++) {
+          const dim7Inv = chordPatterns.find((p) => p.type === "diminished7" && p.inversion === inv);
+          const halfDim7Inv = chordPatterns.find((p) => p.type === "halfdiminished7" && p.inversion === inv);
+          const dimMaj7Inv = chordPatterns.find((p) => p.type === "diminishedMajor7" && p.inversion === inv);
+          const augMin7Inv = chordPatterns.find((p) => p.type === "augmentedMinor7" && p.inversion === inv);
+          const augMaj7Inv = chordPatterns.find((p) => p.type === "augmentedMajor7" && p.inversion === inv);
+          
+          if (dim7Inv) chords.push(createChordDefinition(rootNum, dim7Inv, id++, difficulty));
+          if (halfDim7Inv) chords.push(createChordDefinition(rootNum, halfDim7Inv, id++, difficulty));
+          if (dimMaj7Inv) chords.push(createChordDefinition(rootNum, dimMaj7Inv, id++, difficulty));
+          if (augMin7Inv) chords.push(createChordDefinition(rootNum, augMin7Inv, id++, difficulty));
+          if (augMaj7Inv) chords.push(createChordDefinition(rootNum, augMaj7Inv, id++, difficulty));
+        }
       });
       break;
   }
