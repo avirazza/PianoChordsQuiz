@@ -84,28 +84,16 @@ export default function Game() {
   const handleSubmit = () => {
     if (!currentChord) return;
     
-    // Normalize notes to compare chord quality regardless of octave
-    const normalizeNote = (noteStr: string): string => {
-      // Extract just the note name (C, C#, D, etc.) without the octave
-      return noteStr.replace(/[0-9]/g, '');
-    };
-    
-    // Get the notes from the expected chord without octave numbers
-    const correctNoteNames = currentChord.notes.map(normalizeNote);
-    
-    // Get the notes from user selection without octave numbers
-    const userNoteNames = selectedNotes.map(normalizeNote);
-    
-    // Check if the user selected the right chord quality (regardless of octave)
-    // First, convert to sets to eliminate duplicates
-    const correctNoteNameSet = new Set(correctNoteNames);
-    const userNoteNameSet = new Set(userNoteNames);
+    // Check if selected notes exactly match chord notes (including octaves)
+    const correctNotes = new Set(currentChord.notes);
+    const userNotes = new Set(selectedNotes);
     
     let correct = false;
     
-    // Check if the user has selected the correct notes (just the note names, not octaves)
-    if (correctNoteNameSet.size === userNoteNameSet.size) {
-      correct = Array.from(correctNoteNameSet).every(note => userNoteNameSet.has(note));
+    // First check if the count matches
+    if (correctNotes.size === userNotes.size) {
+      // Then check if all the correct notes are present
+      correct = Array.from(correctNotes).every(note => userNotes.has(note));
     }
     
     setIsCorrect(correct);

@@ -45,44 +45,39 @@ const Key: React.FC<KeyProps> = ({
   if (isBlack) {
     // Position black keys precisely between white keys
     
-    // Get the white keys in order
-    const whiteKeysOrder = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+    // Width of black keys (narrower than white keys)
+    const blackWidth = keyWidth * 0.6;
     
-    // Get base note (without the #)
-    const baseNote = note.charAt(0);
+    // For accurate piano layout, we need to calculate where black keys go
+    // Each octave has 7 white keys (C-D-E-F-G-A-B) and 5 black keys
+    // Total octave width includes all white keys plus gaps
+    const octaveWidth = 7 * keyWidth + 7 * keyGap;
     
-    // Find index of the base note in the white key order
-    const baseNoteIndex = whiteKeysOrder.indexOf(baseNote);
+    // Starting position for this octave
+    const octaveStartX = (octave - 3) * octaveWidth; 
     
-    // Calculate the real position based on key width and gaps
-    // Each octave is 7 keys with gaps between them
-    const octaveOffset = (octave - 3) * 7 * (keyWidth + keyGap);
-    
-    // This is the left edge of the white key
-    const whiteKeyPosition = octaveOffset + baseNoteIndex * (keyWidth + keyGap);
-    
-    // Width of black keys
-    const blackWidth = keyWidth * 0.55; // Slightly narrower black keys
-    
-    // Position black keys based on note type
+    // Position of each black key within the octave
     let position;
     
-    // Apply slight adjustments to each black key type for visual alignment
-    if (note === 'C#') {
-      // C# needs to be slightly right of center between C and D
-      position = whiteKeyPosition + keyWidth - (blackWidth * 0.45);
-    } else if (note === 'D#') {
-      // D# needs to be slightly left of center between D and E
-      position = whiteKeyPosition + keyWidth * 2 - (blackWidth * 0.55);
-    } else if (note === 'F#') {
-      // F# needs to be slightly right of center between F and G
-      position = whiteKeyPosition + keyWidth - (blackWidth * 0.45);
-    } else if (note === 'G#') {
-      // G# needs to be slightly in center between G and A
-      position = whiteKeyPosition + keyWidth * 2 - (blackWidth * 0.5);
-    } else if (note === 'A#') {
-      // A# needs to be slightly left of center between A and B
-      position = whiteKeyPosition + keyWidth * 2 - (blackWidth * 0.55);
+    // Static positioning based on standard piano layout
+    switch (note) {
+      case 'C#': // Position between C and D
+        position = octaveStartX + keyWidth * 0.7;
+        break;
+      case 'D#': // Position between D and E
+        position = octaveStartX + keyWidth * 1.7 + keyGap;
+        break;
+      case 'F#': // Position between F and G
+        position = octaveStartX + keyWidth * 3.7 + keyGap * 3;
+        break;
+      case 'G#': // Position between G and A
+        position = octaveStartX + keyWidth * 4.7 + keyGap * 4;
+        break;
+      case 'A#': // Position between A and B
+        position = octaveStartX + keyWidth * 5.7 + keyGap * 5;
+        break;
+      default:
+        position = 0;
     }
     
     style.left = `${position}px`;
