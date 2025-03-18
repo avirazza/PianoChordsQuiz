@@ -12,6 +12,48 @@ import * as Tone from "tone";
 // Import note mapping utilities for feedback system
 import { noteToNumeric, numericToNote } from "@/lib/chords";
 
+// Helper function to convert scale degree to semitone offset
+const scaleDegreeToSemitone = (scaleDegree: string): number => {
+  // Parse the scale degree into a normalized form
+  const degree = scaleDegree.replace(/[b#]/g, "");  // Remove flats/sharps
+  const flatCount = (scaleDegree.match(/b/g) || []).length;
+  const sharpCount = (scaleDegree.match(/#/g) || []).length;
+  
+  // Calculate semitone offset based on the scale degree
+  let semitones = 0;
+  switch(degree) {
+    case "1": semitones = 0; break;  // Root/Unison
+    case "2": semitones = 2; break;  // Major 2nd
+    case "3": semitones = 4; break;  // Major 3rd
+    case "4": semitones = 5; break;  // Perfect 4th
+    case "5": semitones = 7; break;  // Perfect 5th
+    case "6": semitones = 9; break;  // Major 6th
+    case "7": semitones = 11; break; // Major 7th
+    default: semitones = 0;          // Default to root if unknown
+  }
+  
+  // Apply flats and sharps
+  semitones = semitones - flatCount + sharpCount;
+  
+  // Normalize to range 0-11
+  while (semitones < 0) semitones += 12;
+  while (semitones >= 12) semitones -= 12;
+  
+  return semitones;
+};
+
+// Helper function to convert semitone offset to a note value
+const getNoteFromSemitone = (semitones: number, rootNote: number): number => {
+  // Calculate note by adding semitones to root note
+  let note = rootNote + semitones;
+  
+  // Normalize to range 1-12
+  while (note > 12) note -= 12;
+  while (note < 1) note += 12;
+  
+  return note;
+};
+
 export default function Game() {
   const [difficulty, setDifficulty] = useState<DifficultyLevel>("level1");
   const [score, setScore] = useState(0);
@@ -285,47 +327,7 @@ export default function Game() {
         feedbackMsg += "Try again!";
       }
       
-      // Helper function to convert scale degree to semitone offset
-      const scaleDegreeToSemitone = (scaleDegree: string): number => {
-        // Parse the scale degree into a normalized form
-        const degree = scaleDegree.replace(/[b#]/g, "");  // Remove flats/sharps
-        const flatCount = (scaleDegree.match(/b/g) || []).length;
-        const sharpCount = (scaleDegree.match(/#/g) || []).length;
-        
-        // Calculate semitone offset based on the scale degree
-        let semitones = 0;
-        switch(degree) {
-          case "1": semitones = 0; break;  // Root/Unison
-          case "2": semitones = 2; break;  // Major 2nd
-          case "3": semitones = 4; break;  // Major 3rd
-          case "4": semitones = 5; break;  // Perfect 4th
-          case "5": semitones = 7; break;  // Perfect 5th
-          case "6": semitones = 9; break;  // Major 6th
-          case "7": semitones = 11; break; // Major 7th
-          default: semitones = 0;          // Default to root if unknown
-        }
-        
-        // Apply flats and sharps
-        semitones = semitones - flatCount + sharpCount;
-        
-        // Normalize to range 0-11
-        while (semitones < 0) semitones += 12;
-        while (semitones >= 12) semitones -= 12;
-        
-        return semitones;
-      };
-      
-      // Helper function to convert semitone offset to a note value
-      const getNoteFromSemitone = (semitones: number, rootNote: number): number => {
-        // Calculate note by adding semitones to root note
-        let note = rootNote + semitones;
-        
-        // Normalize to range 1-12
-        while (note > 12) note -= 12;
-        while (note < 1) note += 12;
-        
-        return note;
-      };
+
       
       setFeedbackMessage(feedbackMsg);
       
