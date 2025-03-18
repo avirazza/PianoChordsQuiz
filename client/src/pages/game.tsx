@@ -66,13 +66,33 @@ export default function Game() {
     ? chords[currentChordIndex] 
     : undefined;
 
-  // Generate a new random chord
+  // Keep track of recently used chord indices (to prevent repetitive chords)
+  const [recentChordIndices, setRecentChordIndices] = useState<number[]>([]);
+  
+  // Generate a new random chord - avoid repeating recent chords
   const generateNewChord = () => {
     if (chords && chords.length > 0) {
+      // We'll avoid repeating the last 3 chords (or fewer if not enough chords)
+      const avoidCount = Math.min(3, Math.floor(chords.length / 2));
+      
       let newIndex;
+      let attempts = 0;
+      const maxAttempts = 10; // Prevent infinite loop in edge cases
+      
       do {
         newIndex = Math.floor(Math.random() * chords.length);
-      } while (newIndex === currentChordIndex && chords.length > 1);
+        attempts++;
+      } while (
+        attempts < maxAttempts && 
+        (newIndex === currentChordIndex || recentChordIndices.includes(newIndex)) && 
+        chords.length > avoidCount
+      );
+      
+      // Update the recent chord indices
+      setRecentChordIndices(prev => {
+        const updated = [newIndex, ...prev.slice(0, avoidCount - 1)];
+        return updated;
+      });
       
       setCurrentChordIndex(newIndex);
       clearSelectedNotes();
@@ -190,11 +210,13 @@ export default function Game() {
                       value={difficulty}
                       onChange={(e) => setDifficulty(e.target.value as DifficultyLevel)}
                     >
-                      <option value="level1">Level 1: White Key Triads</option>
-                      <option value="level2">Level 2: White Key Root + Black Keys</option>
-                      <option value="level3">Level 3: Sus, Aug, Dim Chords</option>
-                      <option value="level4">Level 4: All 12 Keys</option>
-                      <option value="level5">Level 5: Inversions</option>
+                      <option value="level1">Level 1: Major/Minor Triads</option>
+                      <option value="level2">Level 2: All Major/Minor Triads</option>
+                      <option value="level3">Level 3: Aug/Dim Chords</option>
+                      <option value="level4">Level 4: Aug/Dim + Sus Chords</option>
+                      <option value="level5">Level 5: First Inversions</option>
+                      <option value="level6">Level 6: Second Inversions</option>
+                      <option value="level7">Level 7: All Chords Review</option>
                     </select>
                     <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-neutral-dark">
                       <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">

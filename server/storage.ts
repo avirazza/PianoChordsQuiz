@@ -156,74 +156,119 @@ export class MemStorage implements IStorage {
 
   // Initialize default chords for the game
   private initializeChords(): void {
-    // Level 1: Major and minor triads using only white keys
+    // Level 1: Major and minor triads with simplified naming
     const level1Chords = [
-      { name: 'C Major', notes: ['C4', 'E4', 'G4'], difficulty: 'level1' },
-      { name: 'G Major', notes: ['G4', 'B4', 'D5'], difficulty: 'level1' },
-      { name: 'F Major', notes: ['F4', 'A4', 'C5'], difficulty: 'level1' },
-      { name: 'A Minor', notes: ['A4', 'C5', 'E5'], difficulty: 'level1' },
-      { name: 'D Minor', notes: ['D4', 'F4', 'A4'], difficulty: 'level1' },
-      { name: 'E Minor', notes: ['E4', 'G4', 'B4'], difficulty: 'level1' }
+      { name: 'C', notes: ['C4', 'E4', 'G4'], difficulty: 'level1' },
+      { name: 'Cm', notes: ['C4', 'Eb4', 'G4'], difficulty: 'level1' },
+      { name: 'F', notes: ['F4', 'A4', 'C5'], difficulty: 'level1' },
+      { name: 'Fm', notes: ['F4', 'Ab4', 'C5'], difficulty: 'level1' },
+      { name: 'G', notes: ['G4', 'B4', 'D5'], difficulty: 'level1' },
+      { name: 'Gm', notes: ['G4', 'Bb4', 'D5'], difficulty: 'level1' },
+      { name: 'Am', notes: ['A4', 'C5', 'E5'], difficulty: 'level1' },
+      { name: 'Dm', notes: ['D4', 'F4', 'A4'], difficulty: 'level1' },
+      { name: 'Em', notes: ['E4', 'G4', 'B4'], difficulty: 'level1' }
     ];
 
-    // Level 2: Major and minor chords that root in white keys but may use black keys
+    // Level 2: Major and minor chords with all white and black keys
     const level2Chords = [
-      { name: 'D Major', notes: ['D4', 'F#4', 'A4'], difficulty: 'level2' },
-      { name: 'E Major', notes: ['E4', 'G#4', 'B4'], difficulty: 'level2' },
-      { name: 'A Major', notes: ['A4', 'C#5', 'E5'], difficulty: 'level2' },
-      { name: 'B Minor', notes: ['B4', 'D5', 'F#5'], difficulty: 'level2' },
-      { name: 'C Minor', notes: ['C4', 'Eb4', 'G4'], difficulty: 'level2' },
-      { name: 'F Minor', notes: ['F4', 'Ab4', 'C5'], difficulty: 'level2' },
-      { name: 'G Minor', notes: ['G4', 'Bb4', 'D5'], difficulty: 'level2' }
+      { name: 'D', notes: ['D4', 'F#4', 'A4'], difficulty: 'level2' },
+      { name: 'E', notes: ['E4', 'G#4', 'B4'], difficulty: 'level2' },
+      { name: 'A', notes: ['A4', 'C#5', 'E5'], difficulty: 'level2' },
+      { name: 'Bm', notes: ['B4', 'D5', 'F#5'], difficulty: 'level2' },
+      { name: 'Eb', notes: ['Eb4', 'G4', 'Bb4'], difficulty: 'level2' },
+      { name: 'Ab', notes: ['Ab4', 'C5', 'Eb5'], difficulty: 'level2' },
+      { name: 'Bb', notes: ['Bb4', 'D5', 'F5'], difficulty: 'level2' },
+      { name: 'C#', notes: ['C#4', 'F4', 'G#4'], difficulty: 'level2' },
+      { name: 'F#', notes: ['F#4', 'A#4', 'C#5'], difficulty: 'level2' }
     ];
 
-    // Level 3: Dim, Aug, Sus chords rooted in white keys
+    // Level 3: Augmented and Diminished chords
     const level3Chords = [
-      { name: 'C Augmented', notes: ['C4', 'E4', 'G#4'], difficulty: 'level3' },
-      { name: 'D Diminished', notes: ['D4', 'F4', 'Ab4'], difficulty: 'level3' },
-      { name: 'E Diminished', notes: ['E4', 'G4', 'Bb4'], difficulty: 'level3' },
-      { name: 'F Augmented', notes: ['F4', 'A4', 'C#5'], difficulty: 'level3' },
-      { name: 'G Augmented', notes: ['G4', 'B4', 'D#5'], difficulty: 'level3' },
-      { name: 'A Diminished', notes: ['A4', 'C5', 'Eb5'], difficulty: 'level3' },
-      { name: 'Csus2', notes: ['C4', 'D4', 'G4'], difficulty: 'level3' },
-      { name: 'Dsus4', notes: ['D4', 'G4', 'A4'], difficulty: 'level3' },
-      { name: 'Fsus2', notes: ['F4', 'G4', 'C5'], difficulty: 'level3' },
-      { name: 'Gsus4', notes: ['G4', 'C5', 'D5'], difficulty: 'level3' }
+      { name: 'Caug', notes: ['C4', 'E4', 'G#4'], difficulty: 'level3' },
+      { name: 'Cdim', notes: ['C4', 'Eb4', 'Gb4'], difficulty: 'level3' },
+      { name: 'Daug', notes: ['D4', 'F#4', 'A#4'], difficulty: 'level3' },
+      { name: 'Ddim', notes: ['D4', 'F4', 'Ab4'], difficulty: 'level3' },
+      { name: 'Eaug', notes: ['E4', 'G#4', 'C5'], difficulty: 'level3' },
+      { name: 'Edim', notes: ['E4', 'G4', 'Bb4'], difficulty: 'level3' },
+      { name: 'Faug', notes: ['F4', 'A4', 'C#5'], difficulty: 'level3' },
+      { name: 'Fdim', notes: ['F4', 'Ab4', 'B4'], difficulty: 'level3' },
+      { name: 'Gaug', notes: ['G4', 'B4', 'D#5'], difficulty: 'level3' },
+      { name: 'Gdim', notes: ['G4', 'Bb4', 'Db5'], difficulty: 'level3' },
+      { name: 'Aaug', notes: ['A4', 'C#5', 'F5'], difficulty: 'level3' },
+      { name: 'Adim', notes: ['A4', 'C5', 'Eb5'], difficulty: 'level3' }
     ];
 
-    // Level 4: All 12 keys, using proper naming
+    // Level 4: Augmented, Diminished and Sus chords with black keys
     const level4Chords = [
-      { name: 'C# Major', notes: ['C#4', 'F4', 'G#4'], difficulty: 'level4' },
-      { name: 'Eb Major', notes: ['Eb4', 'G4', 'Bb4'], difficulty: 'level4' },
-      { name: 'F# Major', notes: ['F#4', 'A#4', 'C#5'], difficulty: 'level4' },
-      { name: 'Ab Major', notes: ['Ab4', 'C5', 'Eb5'], difficulty: 'level4' },
-      { name: 'Bb Major', notes: ['Bb4', 'D5', 'F5'], difficulty: 'level4' },
-      { name: 'C# Minor', notes: ['C#4', 'E4', 'G#4'], difficulty: 'level4' },
-      { name: 'Eb Minor', notes: ['Eb4', 'Gb4', 'Bb4'], difficulty: 'level4' },
-      { name: 'F# Minor', notes: ['F#4', 'A4', 'C#5'], difficulty: 'level4' },
-      { name: 'G# Minor', notes: ['G#4', 'B4', 'D#5'], difficulty: 'level4' },
-      { name: 'Bb Minor', notes: ['Bb4', 'Db5', 'F5'], difficulty: 'level4' }
+      { name: 'C#aug', notes: ['C#4', 'F4', 'A4'], difficulty: 'level4' },
+      { name: 'C#dim', notes: ['C#4', 'E4', 'G4'], difficulty: 'level4' },
+      { name: 'Ebaug', notes: ['Eb4', 'G4', 'B4'], difficulty: 'level4' },
+      { name: 'Ebdim', notes: ['Eb4', 'Gb4', 'A4'], difficulty: 'level4' },
+      { name: 'F#aug', notes: ['F#4', 'A#4', 'D5'], difficulty: 'level4' },
+      { name: 'F#dim', notes: ['F#4', 'A4', 'C5'], difficulty: 'level4' },
+      { name: 'Abaug', notes: ['Ab4', 'C5', 'E5'], difficulty: 'level4' },
+      { name: 'Abdim', notes: ['Ab4', 'B4', 'D5'], difficulty: 'level4' },
+      { name: 'Bbaug', notes: ['Bb4', 'D5', 'F#5'], difficulty: 'level4' },
+      { name: 'Bbdim', notes: ['Bb4', 'Db5', 'E5'], difficulty: 'level4' },
+      { name: 'Csus2', notes: ['C4', 'D4', 'G4'], difficulty: 'level4' },
+      { name: 'Csus4', notes: ['C4', 'F4', 'G4'], difficulty: 'level4' },
+      { name: 'Dsus2', notes: ['D4', 'E4', 'A4'], difficulty: 'level4' },
+      { name: 'Dsus4', notes: ['D4', 'G4', 'A4'], difficulty: 'level4' }
     ];
 
-    // Level 5: Inversions of triads (1st and 2nd inversions emphasized)
+    // Level 5: First inversions only
     const level5Chords = [
-      // First inversions
-      { name: 'C Major (1st inv)', notes: ['E4', 'G4', 'C5'], difficulty: 'level5' },
-      { name: 'G Major (1st inv)', notes: ['B4', 'D5', 'G5'], difficulty: 'level5' },
-      { name: 'F Major (1st inv)', notes: ['A4', 'C5', 'F5'], difficulty: 'level5' },
-      { name: 'D Major (1st inv)', notes: ['F#4', 'A4', 'D5'], difficulty: 'level5' },
-      { name: 'A Minor (1st inv)', notes: ['C4', 'E4', 'A4'], difficulty: 'level5' },
-      
-      // Second inversions
-      { name: 'C Major (2nd inv)', notes: ['G4', 'C5', 'E5'], difficulty: 'level5' },
-      { name: 'G Major (2nd inv)', notes: ['D4', 'G4', 'B4'], difficulty: 'level5' },
-      { name: 'F Major (2nd inv)', notes: ['C4', 'F4', 'A4'], difficulty: 'level5' },
-      { name: 'D Major (2nd inv)', notes: ['A4', 'D5', 'F#5'], difficulty: 'level5' },
-      { name: 'A Minor (2nd inv)', notes: ['E4', 'A4', 'C5'], difficulty: 'level5' }
+      { name: 'C/E', notes: ['E4', 'G4', 'C5'], difficulty: 'level5' },
+      { name: 'G/B', notes: ['B4', 'D5', 'G5'], difficulty: 'level5' },
+      { name: 'F/A', notes: ['A4', 'C5', 'F5'], difficulty: 'level5' },
+      { name: 'D/F#', notes: ['F#4', 'A4', 'D5'], difficulty: 'level5' },
+      { name: 'Am/C', notes: ['C4', 'E4', 'A4'], difficulty: 'level5' },
+      { name: 'Em/G', notes: ['G4', 'B4', 'E5'], difficulty: 'level5' },
+      { name: 'Dm/F', notes: ['F4', 'A4', 'D5'], difficulty: 'level5' },
+      { name: 'Cm/Eb', notes: ['Eb4', 'G4', 'C5'], difficulty: 'level5' },
+      { name: 'Gm/Bb', notes: ['Bb4', 'D5', 'G5'], difficulty: 'level5' },
+      { name: 'Fm/Ab', notes: ['Ab4', 'C5', 'F5'], difficulty: 'level5' }
+    ];
+    
+    // Level 6: Second inversions only
+    const level6Chords = [
+      { name: 'C/G', notes: ['G4', 'C5', 'E5'], difficulty: 'level6' },
+      { name: 'G/D', notes: ['D4', 'G4', 'B4'], difficulty: 'level6' },
+      { name: 'F/C', notes: ['C4', 'F4', 'A4'], difficulty: 'level6' },
+      { name: 'D/A', notes: ['A4', 'D5', 'F#5'], difficulty: 'level6' },
+      { name: 'Am/E', notes: ['E4', 'A4', 'C5'], difficulty: 'level6' },
+      { name: 'Em/B', notes: ['B4', 'E5', 'G5'], difficulty: 'level6' },
+      { name: 'Dm/A', notes: ['A4', 'D5', 'F5'], difficulty: 'level6' },
+      { name: 'Cm/G', notes: ['G4', 'C5', 'Eb5'], difficulty: 'level6' },
+      { name: 'Gm/D', notes: ['D4', 'G4', 'Bb4'], difficulty: 'level6' },
+      { name: 'Fm/C', notes: ['C4', 'F4', 'Ab4'], difficulty: 'level6' }
+    ];
+    
+    // Level 7: Comprehensive review of all chord types from previous levels
+    const level7Chords = [
+      // Major triads
+      { name: 'C', notes: ['C4', 'E4', 'G4'], difficulty: 'level7' },
+      { name: 'F', notes: ['F4', 'A4', 'C5'], difficulty: 'level7' },
+      { name: 'G', notes: ['G4', 'B4', 'D5'], difficulty: 'level7' },
+      // Minor triads
+      { name: 'Cm', notes: ['C4', 'Eb4', 'G4'], difficulty: 'level7' },
+      { name: 'Am', notes: ['A4', 'C5', 'E5'], difficulty: 'level7' },
+      // Augmented and diminished
+      { name: 'Caug', notes: ['C4', 'E4', 'G#4'], difficulty: 'level7' },
+      { name: 'Ddim', notes: ['D4', 'F4', 'Ab4'], difficulty: 'level7' },
+      // Sus chords
+      { name: 'Dsus4', notes: ['D4', 'G4', 'A4'], difficulty: 'level7' },
+      { name: 'Csus2', notes: ['C4', 'D4', 'G4'], difficulty: 'level7' },
+      // First Inversions
+      { name: 'C/E', notes: ['E4', 'G4', 'C5'], difficulty: 'level7' },
+      { name: 'Am/C', notes: ['C4', 'E4', 'A4'], difficulty: 'level7' },
+      // Second Inversions
+      { name: 'G/D', notes: ['D4', 'G4', 'B4'], difficulty: 'level7' },
+      { name: 'F/C', notes: ['C4', 'F4', 'A4'], difficulty: 'level7' }
     ];
 
     // Add all chords to storage
-    [...level1Chords, ...level2Chords, ...level3Chords, ...level4Chords, ...level5Chords].forEach(chord => {
+    [...level1Chords, ...level2Chords, ...level3Chords, ...level4Chords, ...level5Chords, ...level6Chords, ...level7Chords].forEach(chord => {
       this.createChord({
         name: chord.name,
         notes: JSON.stringify(chord.notes),
