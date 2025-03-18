@@ -41,35 +41,27 @@ const Key: React.FC<KeyProps> = ({
   const style: React.CSSProperties = {};
   
   if (isBlack) {
-    // Black key positioning based on note name
-    // We need to position precisely between white keys
-    // Each white key has width of keyWidth
+    // Simplified, more accurate black key positioning
+    // Get white key index and position black key relative to it
     
-    // This calculates the actual index of the white key in the overall layout
-    // For example: C3 is index 0, D3 is index 1, E3 is index 2, etc.
-    const whiteKeyIndex = (octave - 3) * 7 + 
-                          ['C', 'D', 'E', 'F', 'G', 'A', 'B'].indexOf(note.replace('#', ''));
-                          
-    // Calculate position for black keys
-    let position = 0;
-    const blackWidth = keyWidth * 0.65; // Width of black keys
+    // Get the white keys in order
+    const whiteKeysOrder = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
     
-    if (note === 'C#') {
-      // Position between C and D
-      position = whiteKeyIndex * keyWidth + keyWidth - (blackWidth / 2);
-    } else if (note === 'D#') {
-      // Position between D and E
-      position = (whiteKeyIndex + 1) * keyWidth + keyWidth - (blackWidth / 2);
-    } else if (note === 'F#') {
-      // Position between F and G
-      position = (whiteKeyIndex + 1) * keyWidth + keyWidth - (blackWidth / 2);
-    } else if (note === 'G#') {
-      // Position between G and A
-      position = (whiteKeyIndex + 1) * keyWidth + keyWidth - (blackWidth / 2);
-    } else if (note === 'A#') {
-      // Position between A and B
-      position = (whiteKeyIndex + 1) * keyWidth + keyWidth - (blackWidth / 2);
-    }
+    // Get base note (without the #)
+    const baseNote = note.charAt(0);
+    
+    // Find index of the base note
+    const baseNoteIndex = whiteKeysOrder.indexOf(baseNote);
+    
+    // Calculate absolute position of the white key in the piano layout
+    const whiteKeyPosition = ((octave - 3) * 7 + baseNoteIndex) * keyWidth;
+    
+    // Width of black keys
+    const blackWidth = keyWidth * 0.6;
+    
+    // Position black key exactly between the current white key and the next one
+    // We need to shift it by 3/4 of the white key width to center it between the keys
+    const position = whiteKeyPosition + keyWidth - (blackWidth / 2);
     
     style.left = `${position}px`;
     style.width = `${blackWidth}px`;
@@ -295,14 +287,25 @@ const Piano: React.FC<PianoProps> = ({ selectedNotes, onNoteClick }) => {
                   : 'bg-yellow-500'
             }`}
           ></div>
-          <p className="text-neutral-dark/70">
-            {!midiStatus.supported 
-              ? 'MIDI not supported in this browser' 
-              : midiStatus.connected 
-                ? `MIDI connected: ${midiStatus.devices.join(', ')} ${isActive ? '(active)' : ''}`
-                : 'Connect a MIDI keyboard to use it with this app'
-            }
-          </p>
+          <div className="text-neutral-dark/70">
+            {!midiStatus.supported ? (
+              <div>
+                <p className="text-red-500 font-semibold">MIDI not supported in this browser</p>
+                <p className="text-xs mt-1">
+                  To use MIDI, try Chrome or Edge browser with "chrome://flags/#enable-web-midi" enabled
+                </p>
+              </div>
+            ) : midiStatus.connected ? (
+              <p>MIDI connected: {midiStatus.devices.join(', ')} {isActive ? '(active)' : ''}</p>
+            ) : (
+              <div>
+                <p>Connect a MIDI keyboard to use it with this app</p>
+                <p className="text-xs mt-1">
+                  If your keyboard is already connected but not detected, try reconnecting the USB cable
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
