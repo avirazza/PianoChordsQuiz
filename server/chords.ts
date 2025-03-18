@@ -194,14 +194,11 @@ export function generateChordName(
     // For inversions, find the bass note
     const bassInterval = pattern.intervals[0];
     const bassNoteNum = (rootNum + bassInterval) % 12 || 12;
-    const bassNoteName = getRootName(bassNoteNum);
     
     // Use the getInversionDisplay function to get the inversion text
     const inversionText = getInversionDisplay(pattern.inversion);
     
-    // Show the chord with root/bass notation (e.g., "F/C" for F chord with C in the bass)
-    // Also include the inversion text for clarity
-    return `${rootName}${pattern.display}/${bassNoteName}    ${inversionText}`;
+    return `${rootName}${pattern.display}    ${inversionText}`;
   }
 }
 
