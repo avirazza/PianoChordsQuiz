@@ -15,6 +15,7 @@ interface KeyProps {
   onNoteClick: (note: { note: string; octave: number }) => void;
   isBlack?: boolean;
   keyWidth: number;
+  keyGap?: number;
 }
 
 // Piano Key Component
@@ -24,7 +25,8 @@ const Key: React.FC<KeyProps> = ({
   selected, 
   onNoteClick, 
   isBlack = false, 
-  keyWidth 
+  keyWidth,
+  keyGap = 2 // Default gap of 2px
 }) => {
   const keyType = isBlack ? "black-key" : "white-key";
   
@@ -41,8 +43,7 @@ const Key: React.FC<KeyProps> = ({
   const style: React.CSSProperties = {};
   
   if (isBlack) {
-    // Simplified, more accurate black key positioning
-    // Get white key index and position black key relative to it
+    // Position black keys precisely between white keys
     
     // Get the white keys in order
     const whiteKeysOrder = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
@@ -50,25 +51,29 @@ const Key: React.FC<KeyProps> = ({
     // Get base note (without the #)
     const baseNote = note.charAt(0);
     
-    // Find index of the base note
+    // Find index of the base note in the white key order
     const baseNoteIndex = whiteKeysOrder.indexOf(baseNote);
     
-    // Calculate absolute position of the white key in the piano layout
-    const whiteKeyPosition = ((octave - 3) * 7 + baseNoteIndex) * keyWidth;
+    // Calculate the real position based on key width and gaps
+    // Each octave is 7 keys with gaps between them
+    const octaveOffset = (octave - 3) * 7 * (keyWidth + keyGap);
+    
+    // This is the left edge of the white key
+    const whiteKeyPosition = octaveOffset + baseNoteIndex * (keyWidth + keyGap);
     
     // Width of black keys
     const blackWidth = keyWidth * 0.6;
     
-    // Position black key exactly between the current white key and the next one
-    // We need to shift it by 3/4 of the white key width to center it between the keys
+    // Center black key at the right edge of its white key
     const position = whiteKeyPosition + keyWidth - (blackWidth / 2);
     
     style.left = `${position}px`;
     style.width = `${blackWidth}px`;
     
   } else {
-    // Set width for white keys
+    // White keys have width + small gaps between them
     style.width = `${keyWidth}px`;
+    style.marginRight = `${keyGap}px`;
   }
   
   return (
@@ -122,8 +127,9 @@ const Piano: React.FC<PianoProps> = ({ selectedNotes, onNoteClick }) => {
     });
   });
   
-  // Calculate key width based on available space
-  const keyWidth = 40; // Width in pixels for responsive design
+  // Piano key sizing and spacing
+  const keyWidth = 40; // Width in pixels for white keys
+  const keyGap = 2;    // Gap between white keys (pixels)
   
   // Setup MIDI Input with type casting for TypeScript compatibility
   useEffect(() => {
@@ -252,6 +258,7 @@ const Piano: React.FC<PianoProps> = ({ selectedNotes, onNoteClick }) => {
                 selected={selectedNotes.includes(`${key.note}${key.octave}`)}
                 onNoteClick={onNoteClick}
                 keyWidth={keyWidth}
+                keyGap={keyGap}
               />
             ))}
           </div>
@@ -267,6 +274,7 @@ const Piano: React.FC<PianoProps> = ({ selectedNotes, onNoteClick }) => {
                 onNoteClick={onNoteClick}
                 isBlack
                 keyWidth={keyWidth}
+                keyGap={keyGap}
               />
             ))}
           </div>
