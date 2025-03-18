@@ -8,6 +8,7 @@ import ChordChallenge from "@/components/ChordChallenge";
 import GameControls from "@/components/GameControls";
 import Instructions from "@/components/Instructions";
 import { usePiano } from "@/hooks/use-piano";
+import * as Tone from "tone";
 
 export default function Game() {
   const [difficulty, setDifficulty] = useState<DifficultyLevel>("beginner");
@@ -30,6 +31,27 @@ export default function Game() {
     toggleNoteSelection,
     playChord,
   } = usePiano();
+
+  // Initialize Tone.js when the component mounts
+  useEffect(() => {
+    // Initialize Tone.js on first user interaction (required by browsers)
+    const handleFirstInteraction = () => {
+      if (Tone.context.state !== "running") {
+        console.log("Starting Tone.js audio context...");
+        Tone.start();
+        document.removeEventListener("click", handleFirstInteraction);
+        document.removeEventListener("keydown", handleFirstInteraction);
+      }
+    };
+    
+    document.addEventListener("click", handleFirstInteraction);
+    document.addEventListener("keydown", handleFirstInteraction);
+    
+    return () => {
+      document.removeEventListener("click", handleFirstInteraction);
+      document.removeEventListener("keydown", handleFirstInteraction);
+    };
+  }, []);
 
   // Set a random chord when difficulty changes or when chords load
   useEffect(() => {

@@ -41,24 +41,39 @@ const Key: React.FC<KeyProps> = ({
   const style: React.CSSProperties = {};
   
   if (isBlack) {
-    // Black key positioning based on note name and octave
-    const positionMap: Record<string, number> = {
-      'C#': 0.7,  // Position between C and D
-      'D#': 1.7,  // Position between D and E
-      'F#': 3.7,  // Position between F and G
-      'G#': 4.7,  // Position between G and A
-      'A#': 5.7   // Position between A and B
-    };
+    // Black key positioning based on note name
+    // We need to position precisely between white keys
+    // Each white key has width of keyWidth
     
-    // Calculate position with octave offset
-    const position = positionMap[note];
-    if (position !== undefined) {
-      const octaveOffset = (octave - 3) * 7; // Starting from octave 3
-      const absolutePosition = position + octaveOffset;
-      
-      style.left = `calc(${absolutePosition * keyWidth}px)`;
-      style.width = `${keyWidth * 0.65}px`;
+    // This calculates the actual index of the white key in the overall layout
+    // For example: C3 is index 0, D3 is index 1, E3 is index 2, etc.
+    const whiteKeyIndex = (octave - 3) * 7 + 
+                          ['C', 'D', 'E', 'F', 'G', 'A', 'B'].indexOf(note.replace('#', ''));
+                          
+    // Calculate position for black keys
+    let position = 0;
+    const blackWidth = keyWidth * 0.65; // Width of black keys
+    
+    if (note === 'C#') {
+      // Position between C and D
+      position = whiteKeyIndex * keyWidth + keyWidth - (blackWidth / 2);
+    } else if (note === 'D#') {
+      // Position between D and E
+      position = (whiteKeyIndex + 1) * keyWidth + keyWidth - (blackWidth / 2);
+    } else if (note === 'F#') {
+      // Position between F and G
+      position = (whiteKeyIndex + 1) * keyWidth + keyWidth - (blackWidth / 2);
+    } else if (note === 'G#') {
+      // Position between G and A
+      position = (whiteKeyIndex + 1) * keyWidth + keyWidth - (blackWidth / 2);
+    } else if (note === 'A#') {
+      // Position between A and B
+      position = (whiteKeyIndex + 1) * keyWidth + keyWidth - (blackWidth / 2);
     }
+    
+    style.left = `${position}px`;
+    style.width = `${blackWidth}px`;
+    
   } else {
     // Set width for white keys
     style.width = `${keyWidth}px`;
@@ -88,6 +103,19 @@ const Piano: React.FC<PianoProps> = ({ selectedNotes, onNoteClick }) => {
   const whiteNotes = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
   const blackNotes = ['C#', 'D#', 'F#', 'G#', 'A#'];
   
+  // State for tracking MIDI devices
+  const [midiStatus, setMidiStatus] = React.useState<{
+    supported: boolean;
+    connected: boolean;
+    devices: string[];
+    lastMessage: number;
+  }>({
+    supported: false,
+    connected: false,
+    devices: [],
+    lastMessage: 0
+  });
+  
   // Generate white and black keys
   const whiteKeys: Array<{ note: string; octave: number }> = [];
   const blackKeys: Array<{ note: string; octave: number }> = [];
@@ -108,18 +136,51 @@ const Piano: React.FC<PianoProps> = ({ selectedNotes, onNoteClick }) => {
   // Setup MIDI Input with type casting for TypeScript compatibility
   useEffect(() => {
     if ('requestMIDIAccess' in navigator) {
+      setMidiStatus(prev => ({ ...prev, supported: true }));
+      
       // Use 'any' type to bypass TypeScript type checking since MIDI interfaces are complex
       const nav = navigator as any;
       nav.requestMIDIAccess()
         .then((midiAccess: any) => {
+          // Check connected devices
           const inputs = midiAccess.inputs.values();
+          const connectedDevices: string[] = [];
+          
           for (let input = inputs.next(); input && !input.done; input = inputs.next()) {
             input.value.onmidimessage = handleMIDIMessage;
+            if (input.value.name) {
+              connectedDevices.push(input.value.name);
+            }
           }
           
+          // Update MIDI status
+          setMidiStatus(prev => ({
+            ...prev, 
+            connected: connectedDevices.length > 0,
+            devices: connectedDevices
+          }));
+          
+          // Listen for MIDI connection/disconnection
           midiAccess.onstatechange = (e: any) => {
             if (e.port) {
               console.log('MIDI connection state change:', e.port.name, e.port.state);
+              
+              // Refresh the device list
+              const updatedInputs = midiAccess.inputs.values();
+              const updatedDevices: string[] = [];
+              
+              for (let input = updatedInputs.next(); input && !input.done; input = updatedInputs.next()) {
+                if (input.value.state === 'connected' && input.value.name) {
+                  updatedDevices.push(input.value.name);
+                  input.value.onmidimessage = handleMIDIMessage;
+                }
+              }
+              
+              setMidiStatus(prev => ({
+                ...prev,
+                connected: updatedDevices.length > 0,
+                devices: updatedDevices
+              }));
             }
           };
           
@@ -127,9 +188,19 @@ const Piano: React.FC<PianoProps> = ({ selectedNotes, onNoteClick }) => {
         })
         .catch((err: Error) => {
           console.log('MIDI access denied:', err.message);
+          setMidiStatus(prev => ({ 
+            ...prev, 
+            supported: true, 
+            connected: false 
+          }));
         });
     } else {
       console.log('Web MIDI API not supported in this browser');
+      setMidiStatus(prev => ({ 
+        ...prev, 
+        supported: false, 
+        connected: false 
+      }));
     }
   }, []);
   
@@ -140,6 +211,9 @@ const Piano: React.FC<PianoProps> = ({ selectedNotes, onNoteClick }) => {
       const command = message.data[0];
       const note = message.data[1];
       const velocity = message.data[2];
+      
+      // Update last message timestamp for activity indicator
+      setMidiStatus(prev => ({ ...prev, lastMessage: Date.now() }));
       
       // Note on (144) with velocity > 0
       if ((command === 144) && (velocity > 0)) {
@@ -168,6 +242,9 @@ const Piano: React.FC<PianoProps> = ({ selectedNotes, onNoteClick }) => {
     }
     return ['C', 4]; // Default fallback
   };
+  
+  // MIDI status indicator with activity
+  const isActive = Date.now() - midiStatus.lastMessage < 500; // Active if message in last 500ms
   
   return (
     <div className="relative overflow-x-auto py-4">
@@ -203,8 +280,30 @@ const Piano: React.FC<PianoProps> = ({ selectedNotes, onNoteClick }) => {
           </div>
         </div>
       </div>
-      <div className="text-center mt-4 text-sm text-neutral-dark/70">
-        <p>MIDI keyboard support: Connect a MIDI keyboard to use it with this app</p>
+      
+      {/* MIDI Connection Status */}
+      <div className="text-center mt-4 text-sm">
+        <div className="flex items-center justify-center gap-2">
+          <div 
+            className={`w-3 h-3 rounded-full ${
+              !midiStatus.supported 
+                ? 'bg-red-500' 
+                : midiStatus.connected 
+                  ? isActive 
+                    ? 'bg-green-500 animate-pulse' 
+                    : 'bg-green-500'
+                  : 'bg-yellow-500'
+            }`}
+          ></div>
+          <p className="text-neutral-dark/70">
+            {!midiStatus.supported 
+              ? 'MIDI not supported in this browser' 
+              : midiStatus.connected 
+                ? `MIDI connected: ${midiStatus.devices.join(', ')} ${isActive ? '(active)' : ''}`
+                : 'Connect a MIDI keyboard to use it with this app'
+            }
+          </p>
+        </div>
       </div>
     </div>
   );
