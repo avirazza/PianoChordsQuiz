@@ -480,62 +480,57 @@ rootsLevel6.forEach((rootNum) => {
   }
 });
 
-// Level 7: Comprehensive review of all chord types from previous levels
-// We'll select a representative subset of all previous chords
-const patterns = {
-  major: chordPatterns.find((p) => p.type === "major" && p.inversion === 0),
-  minor: chordPatterns.find((p) => p.type === "minor" && p.inversion === 0),
-  aug: chordPatterns.find((p) => p.type === "augmented" && p.inversion === 0),
-  dim: chordPatterns.find((p) => p.type === "diminished" && p.inversion === 0),
-  sus2: chordPatterns.find((p) => p.type === "sus2" && p.inversion === 0),
-  sus4: chordPatterns.find((p) => p.type === "sus4" && p.inversion === 0),
-  majorInv1: chordPatterns.find((p) => p.type === "major" && p.inversion === 1),
-  minorInv1: chordPatterns.find((p) => p.type === "minor" && p.inversion === 1),
-  augInv1: chordPatterns.find(
-    (p) => p.type === "augmented" && p.inversion === 1,
-  ),
-  dimInv1: chordPatterns.find(
-    (p) => p.type === "diminished" && p.inversion === 1,
-  ),
-  majorInv2: chordPatterns.find((p) => p.type === "major" && p.inversion === 2),
-  minorInv2: chordPatterns.find((p) => p.type === "minor" && p.inversion === 2),
-  augInv2: chordPatterns.find(
-    (p) => p.type === "augmented" && p.inversion === 2,
-  ),
-  dimInv2: chordPatterns.find(
-    (p) => p.type === "diminished" && p.inversion === 2,
-  ),
-};
+// Level 7: Comprehensive review - ALL combinations of chord types, inversions, and root notes
+// Generate all possible combinations for a truly comprehensive level 7
 
-// Add a variety of chords to level 7
-if (patterns.major) {
-  chordsByDifficulty["level7"].push(
-    createChordDef(1, patterns.major, idCounter++, "level7"),
-  ); // C
-  chordsByDifficulty["level7"].push(
-    createChordDef(6, patterns.major, idCounter++, "level7"),
-  ); // F
+// First, let's organize our chord patterns by type and inversion for easier access
+const patternsByTypeAndInversion: Record<string, Record<number, ChordPattern>> = {};
+
+// Helper to organize the patterns
+function organizePatterns() {
+  // Initialize the nested structure
+  ["major", "minor", "augmented", "diminished", "sus2", "sus4"].forEach(type => {
+    patternsByTypeAndInversion[type] = {};
+  });
+  
+  // Organize each pattern by type and inversion
+  chordPatterns.forEach(pattern => {
+    if (!patternsByTypeAndInversion[pattern.type]) {
+      patternsByTypeAndInversion[pattern.type] = {};
+    }
+    patternsByTypeAndInversion[pattern.type][pattern.inversion] = pattern;
+  });
 }
 
-if (patterns.minor) {
-  chordsByDifficulty["level7"].push(
-    createChordDef(10, patterns.minor, idCounter++, "level7"),
-  ); // Am
-  chordsByDifficulty["level7"].push(
-    createChordDef(3, patterns.minor, idCounter++, "level7"),
-  ); // Dm
-}
+// Call the helper to organize our patterns
+organizePatterns();
 
-if (patterns.aug) {
-  chordsByDifficulty["level7"].push(
-    createChordDef(1, patterns.aug, idCounter++, "level7"),
-  ); // Caug
-}
+// List of all chord types we want to include
+const allChordTypes = ["major", "minor", "augmented", "diminished", "sus2", "sus4"];
+
+// Generate ALL combinations for level 7
+allRoots.forEach(rootNum => {
+  // For each root note, iterate through all chord types
+  allChordTypes.forEach(chordType => {
+    // Get all available inversions for this chord type
+    const inversions = Object.keys(patternsByTypeAndInversion[chordType]).map(Number);
+    
+    // Add each inversion of this chord type with this root
+    inversions.forEach(inversion => {
+      const pattern = patternsByTypeAndInversion[chordType][inversion];
+      if (pattern) {
+        chordsByDifficulty["level7"].push(
+          createChordDef(rootNum, pattern, idCounter++, "level7")
+        );
+      }
+    });
+  });
+});
 
 // CHORD MATCHING LOGIC
 
 /**
- * Compare two chords to see if they match, regardless of octave
+ * Compare two chords to see if they match, enforcing the correct inversion order
  * Uses a mathematical approach with numeric note representation (1-12)
  * 
  * @param userNotes Array of note strings (e.g. ["C4", "E4", "G4"])
@@ -548,21 +543,57 @@ export function checkChordMatch(userNotes: string[], targetNotes: string[]): boo
     return false;
   }
   
+  // Extract both note values and octaves
+  const userNotesWithOctaves = userNotes.map(noteStr => {
+    const noteName = noteStr.replace(/[0-9]/g, "");
+    const octave = parseInt(noteStr.match(/[0-9]+/)?.[0] || "4", 10);
+    return {
+      note: noteToNumber[noteName] || 0,
+      octave
+    };
+  });
+  
+  const targetNotesWithOctaves = targetNotes.map(noteStr => {
+    const noteName = noteStr.replace(/[0-9]/g, "");
+    const octave = parseInt(noteStr.match(/[0-9]+/)?.[0] || "4", 10);
+    return {
+      note: noteToNumber[noteName] || 0,
+      octave
+    };
+  });
+  
   // Convert notes to numeric representation (1-12) regardless of octave
-  const userNumeric = userNotes.map(noteToNumeric).sort((a, b) => a - b);
-  const targetNumeric = targetNotes.map(noteToNumeric).sort((a, b) => a - b);
+  const userNumeric = userNotes.map(noteToNumeric);
+  const targetNumeric = targetNotes.map(noteToNumeric);
   
-  // Check if the numeric representations match (ignoring octaves)
-  if (userNumeric.length !== targetNumeric.length) {
-    return false;
-  }
+  // First check: Do we have the same notes (regardless of order)?
+  const userNotesSorted = [...userNumeric].sort((a, b) => a - b);
+  const targetNotesSorted = [...targetNumeric].sort((a, b) => a - b);
   
-  // Check each note
-  for (let i = 0; i < userNumeric.length; i++) {
-    if (userNumeric[i] !== targetNumeric[i]) {
-      return false;
+  // Check if the collections of notes match (ignoring octaves and order)
+  for (let i = 0; i < userNotesSorted.length; i++) {
+    if (userNotesSorted[i] !== targetNotesSorted[i]) {
+      return false; // Different notes in the chord
     }
   }
   
+  // Second check: Is the bottom note correct? (critical for inversions)
+  // Sort the user notes by octave first, then by note number within the same octave
+  userNotesWithOctaves.sort((a, b) => {
+    if (a.octave !== b.octave) return a.octave - b.octave;
+    return a.note - b.note;
+  });
+  
+  targetNotesWithOctaves.sort((a, b) => {
+    if (a.octave !== b.octave) return a.octave - b.octave;
+    return a.note - b.note;
+  });
+  
+  // Check if the bottom note matches (this enforces correct inversion)
+  if (userNotesWithOctaves[0].note !== targetNotesWithOctaves[0].note) {
+    return false; // Wrong bottom note = wrong inversion
+  }
+  
+  // The chord has the same notes and the correct bottom note, so it's valid
   return true;
 }
