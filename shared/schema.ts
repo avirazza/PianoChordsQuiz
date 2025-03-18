@@ -10,14 +10,6 @@ export const users = pgTable("users", {
   highScore: integer("high_score").default(0),
 });
 
-// Chords table for storing chord definitions
-export const chords = pgTable("chords", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  notes: text("notes").notNull(), // Stored as JSON string of notes
-  difficulty: text("difficulty").notNull(), // 'beginner', 'intermediate', 'advanced'
-});
-
 // GameSession table for tracking game activity
 export const gameSessions = pgTable("game_sessions", {
   id: serial("id").primaryKey(),
@@ -33,13 +25,6 @@ export const insertUserSchema = createInsertSchema(users).pick({
   password: true,
 });
 
-// Schema for inserting new chords
-export const insertChordSchema = createInsertSchema(chords).pick({
-  name: true,
-  notes: true,
-  difficulty: true,
-});
-
 // Schema for inserting new game sessions
 export const insertGameSessionSchema = createInsertSchema(gameSessions).pick({
   userId: true,
@@ -51,9 +36,6 @@ export const insertGameSessionSchema = createInsertSchema(gameSessions).pick({
 // TypeScript types derived from schemas
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
-
-export type InsertChord = z.infer<typeof insertChordSchema>;
-export type Chord = typeof chords.$inferSelect;
 
 export type InsertGameSession = z.infer<typeof insertGameSessionSchema>;
 export type GameSession = typeof gameSessions.$inferSelect;
