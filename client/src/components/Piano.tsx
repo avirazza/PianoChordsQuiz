@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 
-// Add this comment to suppress TypeScript MIDIConnectionEvent errors
+// Add this comment to suppress TypeScript warnings
 // @ts-ignore
 
 interface PianoProps {
@@ -18,8 +18,17 @@ interface KeyProps {
 }
 
 // Piano Key Component
-const Key: React.FC<KeyProps> = ({ note, octave, selected, onNoteClick, isBlack = false, keyWidth }) => {
+const Key: React.FC<KeyProps> = ({ 
+  note, 
+  octave, 
+  selected, 
+  onNoteClick, 
+  isBlack = false, 
+  keyWidth 
+}) => {
   const keyType = isBlack ? "black-key" : "white-key";
+  
+  // CSS classes for key styling
   const baseClasses = isBlack
     ? "absolute bg-black border border-neutral-dark/60 rounded-b-md h-full cursor-pointer hover:bg-gray-800 active:bg-gray-700 z-10"
     : "relative bg-white border border-neutral-dark/30 rounded-b-md h-full mx-[1px] cursor-pointer hover:bg-blue-50 active:bg-blue-100";
@@ -28,32 +37,37 @@ const Key: React.FC<KeyProps> = ({ note, octave, selected, onNoteClick, isBlack 
     ? isBlack ? "bg-primary/70 border-primary" : "bg-primary/20 border-primary" 
     : "";
   
-  // Determine black key position
-  const blackKeyStyle: React.CSSProperties = {};
+  // Create style object for positioning
+  const style: React.CSSProperties = {};
+  
   if (isBlack) {
-    // Position black keys with correct offset
+    // Black key positioning based on note name and octave
     const positionMap: Record<string, number> = {
-      'C#': 0.7,
-      'D#': 1.7,
-      'F#': 3.7,
-      'G#': 4.7,
-      'A#': 5.7
+      'C#': 0.7,  // Position between C and D
+      'D#': 1.7,  // Position between D and E
+      'F#': 3.7,  // Position between F and G
+      'G#': 4.7,  // Position between G and A
+      'A#': 5.7   // Position between A and B
     };
     
+    // Calculate position with octave offset
     const position = positionMap[note];
     if (position !== undefined) {
-      blackKeyStyle.left = `calc(${position * keyWidth}px)`;
-      blackKeyStyle.width = `${keyWidth * 0.65}px`;
+      const octaveOffset = (octave - 3) * 7; // Starting from octave 3
+      const absolutePosition = position + octaveOffset;
+      
+      style.left = `calc(${absolutePosition * keyWidth}px)`;
+      style.width = `${keyWidth * 0.65}px`;
     }
   } else {
     // Set width for white keys
-    blackKeyStyle.width = `${keyWidth}px`;
+    style.width = `${keyWidth}px`;
   }
   
   return (
     <div
       className={`piano-key ${keyType} ${baseClasses} ${selectedClasses}`}
-      style={blackKeyStyle}
+      style={style}
       onClick={() => onNoteClick({ note, octave })}
       data-note={`${note}${octave}`}
     >
