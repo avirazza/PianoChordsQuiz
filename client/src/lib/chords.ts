@@ -2,6 +2,7 @@ import {
   type ChordData,
   type DifficultyLevel,
   difficultyLevels,
+  type Note,
 } from "@shared/schema";
 
 // CHORD TYPE DEFINITIONS
@@ -529,4 +530,39 @@ if (patterns.aug) {
   chordsByDifficulty["level7"].push(
     createChordDef(1, patterns.aug, idCounter++, "level7"),
   ); // Caug
+}
+
+// CHORD MATCHING LOGIC
+
+/**
+ * Compare two chords to see if they match, regardless of octave
+ * Uses a mathematical approach with numeric note representation (1-12)
+ * 
+ * @param userNotes Array of note strings (e.g. ["C4", "E4", "G4"])
+ * @param targetNotes Array of note strings for the target chord
+ * @returns boolean indicating whether the chords match
+ */
+export function checkChordMatch(userNotes: string[], targetNotes: string[]): boolean {
+  // Ensure we have the same number of notes
+  if (userNotes.length !== targetNotes.length) {
+    return false;
+  }
+  
+  // Convert notes to numeric representation (1-12) regardless of octave
+  const userNumeric = userNotes.map(noteToNumeric).sort((a, b) => a - b);
+  const targetNumeric = targetNotes.map(noteToNumeric).sort((a, b) => a - b);
+  
+  // Check if the numeric representations match (ignoring octaves)
+  if (userNumeric.length !== targetNumeric.length) {
+    return false;
+  }
+  
+  // Check each note
+  for (let i = 0; i < userNumeric.length; i++) {
+    if (userNumeric[i] !== targetNumeric[i]) {
+      return false;
+    }
+  }
+  
+  return true;
 }
