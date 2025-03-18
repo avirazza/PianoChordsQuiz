@@ -10,7 +10,7 @@ import Instructions from "@/components/Instructions";
 import { usePiano } from "@/hooks/use-piano";
 import * as Tone from "tone";
 // Import note mapping utilities for feedback system
-import { noteToNumber, numberToNote } from "@/lib/chords";
+import { noteToNumeric, numericToNote } from "@/lib/chords";
 
 export default function Game() {
   const [difficulty, setDifficulty] = useState<DifficultyLevel>("level1");
@@ -202,7 +202,7 @@ export default function Game() {
         // Identify the scale degrees in the selected notes
         const selectedNoteNumbers = selectedNotes.map(noteStr => {
           const noteName = noteStr.replace(/[0-9]/g, "");
-          return noteToNumber[noteName] || 0;
+          return noteToNumeric(noteName);
         });
         
         // Check if we're missing the root note (the "1" scale degree)
@@ -215,7 +215,7 @@ export default function Game() {
           const hasRootNote = selectedNoteNumbers.includes(rootNoteValue);
           
           if (!hasRootNote) {
-            feedbackMsg += `You're missing the root note (${numberToNote[rootNoteValue]}) of the chord. `;
+            feedbackMsg += `You're missing the root note (${numericToNote(rootNoteValue, 4)}) of the chord. `;
           }
         }
         
