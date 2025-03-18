@@ -28,16 +28,30 @@ export function usePiano() {
 
   // Handle MIDI note on message
   const onMIDIMessage = useCallback((event: WebMidi.MIDIMessageEvent) => {
+    // Log MIDI message received
+    console.log("MIDI message received:", event);
+    
+    // Start audio context if suspended
+    if (Tone.context.state !== "running") {
+      console.log("Starting Tone.js context due to MIDI input");
+      Tone.start();
+    }
+    
     const currentSynth = initSynth();
     // Convert Uint8Array to regular array to fix iteration issues
     const data = Array.from(event.data);
+    console.log("MIDI data received:", data);
+    
     const command = data[0];
     const note = data[1];
     const velocity = data[2];
     
+    console.log(`MIDI command: ${command}, note: ${note}, velocity: ${velocity}`);
+    
     // Note on with velocity > 0
     if (command === 144 && velocity > 0) {
       const noteName = midiNoteToNoteName(note);
+      console.log(`MIDI note on: ${noteName} (from MIDI note ${note})`);
       
       // Play the note and add it to selected notes
       currentSynth.triggerAttack(noteName);
@@ -45,7 +59,9 @@ export function usePiano() {
       // Add note to selected notes if not already included
       setSelectedNotes(prev => {
         if (!prev.includes(noteName)) {
-          return [...prev, noteName];
+          const newNotes = [...prev, noteName];
+          console.log("Updated selected notes:", newNotes);
+          return newNotes;
         }
         return prev;
       });
@@ -53,10 +69,13 @@ export function usePiano() {
     // Note off or note on with 0 velocity
     else if (command === 128 || (command === 144 && velocity === 0)) {
       const noteName = midiNoteToNoteName(note);
+      console.log(`MIDI note off: ${noteName} (from MIDI note ${note})`);
       
       // Release the note but don't remove from selected notes
       // This lets the user build chords with MIDI keyboard
       currentSynth.triggerRelease(noteName);
+    } else {
+      console.log(`Unhandled MIDI command: ${command}`);
     }
   }, [initSynth, midiNoteToNoteName]);
 
@@ -64,15 +83,34 @@ export function usePiano() {
   useEffect(() => {
     // Check if Web MIDI API is supported
     if (navigator.requestMIDIAccess) {
-      navigator.requestMIDIAccess()
+      console.log("Web MIDI API is supported in this browser - attempting to connect...");
+      navigator.requestMIDIAccess({ sysex: true })
         .then((access) => {
+          console.log("MIDI Access granted:", access);
+          console.log("Number of inputs:", access.inputs.size);
+          
+          // Check if any MIDI inputs are available
+          if (access.inputs.size === 0) {
+            console.log("No MIDI inputs detected, but API access is available");
+            setMidiEnabled(false);
+            return;
+          }
+          
           setMidiAccess(access);
           setMidiEnabled(true);
+
+          // Log all available MIDI inputs
+          const inputMap = access.inputs;
+          console.log("Available MIDI Inputs:");
+          inputMap.forEach((input, id) => {
+            console.log(`- Input ID: ${id}, Name: ${input.name}, Manufacturer: ${input.manufacturer}, State: ${input.state}`);
+          });
 
           // Set up listeners for MIDI inputs
           const inputs = access.inputs.values();
           let input = inputs.next();
           while (!input.done) {
+            console.log(`Setting up MIDI listener for: ${input.value.name}`);
             // Type assertion to handle missing property in type definition
             (input.value as any).onmidimessage = onMIDIMessage;
             input = inputs.next();
@@ -81,10 +119,30 @@ export function usePiano() {
           // Listen for connection/disconnection of MIDI devices
           access.onstatechange = (event) => {
             const port = event.port;
+            console.log(`MIDI port state change: ${port.name} (${port.type}) is now ${port.state}`);
+            
             if (port.type === 'input') {
               if (port.state === 'connected') {
+                console.log(`MIDI input connected: ${port.name}`);
                 // Type assertion to handle missing property in type definition
                 (port as any).onmidimessage = onMIDIMessage;
+                setMidiEnabled(true);
+              } else if (port.state === 'disconnected') {
+                console.log(`MIDI input disconnected: ${port.name}`);
+                // Check if we still have any connected inputs
+                let hasConnectedInputs = false;
+                const inputs = midiAccess?.inputs.values();
+                if (inputs) {
+                  let input = inputs.next();
+                  while (!input.done) {
+                    if (input.value.state === 'connected') {
+                      hasConnectedInputs = true;
+                      break;
+                    }
+                    input = inputs.next();
+                  }
+                }
+                setMidiEnabled(hasConnectedInputs);
               }
             }
           };
@@ -101,6 +159,7 @@ export function usePiano() {
     // Cleanup MIDI connections on unmount
     return () => {
       if (midiAccess) {
+        console.log("Cleaning up MIDI connections");
         const inputs = midiAccess.inputs.values();
         let input = inputs.next();
         while (!input.done) {
