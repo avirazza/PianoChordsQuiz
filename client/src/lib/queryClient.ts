@@ -41,6 +41,21 @@ export const getQueryFn: <T>(options: {
     return await res.json();
   };
 
+// Function to verify chord matching via the server API
+export async function verifyChordMatch(userNotes: string[], targetNotes: string[]): Promise<boolean> {
+  try {
+    const response = await apiRequest("POST", "/api/verify-chord", {
+      userNotes,
+      targetNotes
+    });
+    const data = await response.json();
+    return data.isMatch;
+  } catch (error) {
+    console.error("Error verifying chord match:", error);
+    return false;
+  }
+}
+
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, verifyChordMatch } from "@/lib/queryClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { type ChordData, type DifficultyLevel } from "@shared/schema";
 import Piano from "@/components/Piano";
@@ -8,7 +8,6 @@ import ChordChallenge from "@/components/ChordChallenge";
 import GameControls from "@/components/GameControls";
 import Instructions from "@/components/Instructions";
 import { usePiano } from "@/hooks/use-piano";
-import { checkChordMatch } from "@/lib/chords";
 import * as Tone from "tone";
 
 export default function Game() {
@@ -165,12 +164,12 @@ export default function Game() {
   }, [currentChord, playChord, clearSelectedNotes]);
   
   // Submit the user's answer
-  const handleSubmit = useCallback(() => {
+  const handleSubmit = useCallback(async () => {
     if (!currentChord) return;
     
-    // Use the checkChordMatch function from the chords library
+    // Use the server-side API for chord matching
     // This handles the mathematical approach to chord matching
-    const correct = checkChordMatch(selectedNotes, currentChord.notes);
+    const correct = await verifyChordMatch(selectedNotes, currentChord.notes);
     
     setIsCorrect(correct);
     setShowFeedback(true);

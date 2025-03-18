@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { checkChordMatch } from "./chords";
 import { DifficultyLevel, difficultyLevels } from "@shared/schema";
 import { z } from "zod";
 
@@ -74,6 +75,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(topScores);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch top scores" });
+    }
+  });
+  
+  // Check if a chord matches the target chord
+  app.post("/api/verify-chord", async (req, res) => {
+    try {
+      const chordVerifySchema = z.object({
+        userNotes: z.array(z.string()),
+        targetNotes: z.array(z.string())
+      });
+      
+      const result = chordVerifySchema.safeParse(req.body);
+      
+      if (!result.success) {
+        return res.status(400).json({ 
+          error: "Invalid chord data", 
+          details: result.error.format() 
+        });
+      }
+      
+      const { userNotes, targetNotes } = result.data;
+      const isMatch = checkChordMatch(userNotes, targetNotes);
+      
+      res.json({ isMatch });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to verify chord match" });
     }
   });
 
