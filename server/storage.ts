@@ -101,7 +101,16 @@ export class MemStorage implements IStorage {
   // Game session operations
   async createGameSession(insertSession: InsertGameSession): Promise<GameSession> {
     const id = this.sessionIdCounter++;
-    const session: GameSession = { ...insertSession, id };
+    
+    // Explicitly conform to the GameSession type by casting
+    const session = {
+      id,
+      difficulty: insertSession.difficulty,
+      userId: insertSession.userId === undefined ? null : insertSession.userId,
+      score: insertSession.score ?? 0, // Use nullish coalescing to handle undefined
+      completedAt: insertSession.completedAt ?? null
+    } as GameSession;
+    
     this.gameSessions.set(id, session);
     return session;
   }
