@@ -210,23 +210,51 @@ export default function Game() {
       
       // Check if we have the target chord data for more detailed feedback
       if (result.targetChord) {
-        // See if the first note (bass note) is wrong - common for inversion errors
-        if (selectedNotes.length > 0 && currentChord.notes.length > 0) {
-          const selectedBassNote = selectedNotes[0].replace(/[0-9]/g, ""); // Remove octave
-          const targetBassNote = currentChord.notes[0].replace(/[0-9]/g, ""); // Remove octave
+        // Get the target chord info
+        const targetName = result.targetChord.name;
+        const rootNote = result.targetChord.rootNote;
+        const inversion = result.targetChord.inversion;
+        
+        // Identify the scale degrees in the selected notes
+        const selectedNoteNumbers = selectedNotes.map(noteStr => {
+          const noteName = noteStr.replace(/[0-9]/g, "");
+          return noteToNumber[noteName] || 0;
+        });
+        
+        // Check if we're missing the root note (the "1" scale degree)
+        const scaleDegrees = result.targetChord.scaleDegrees;
+        const rootScaleDegreePosition = Object.entries(scaleDegrees)
+          .find(([_, degree]) => degree === "1")?.[0];
+        
+        if (rootScaleDegreePosition) {
+          const rootNoteValue = rootNote; // Numeric value of the root (1-12)
+          const hasRootNote = selectedNoteNumbers.includes(rootNoteValue);
           
-          if (selectedBassNote !== targetBassNote) {
-            // If bass note is wrong, it might be an inversion issue
-            if (result.targetChord.inversion > 0) {
-              feedbackMsg += `Check the inversion - this is a ${result.targetChord.name}.`;
+          if (!hasRootNote) {
+            feedbackMsg += `You're missing the root note (${numberToNote[rootNoteValue]}) of the chord. `;
+          }
+        }
+        
+        // Check inversion
+        if (inversion > 0) {
+          // This is an inverted chord
+          if (selectedNotes.length > 0 && currentChord.notes.length > 0) {
+            const selectedBassNote = selectedNotes[0].replace(/[0-9]/g, ""); // Remove octave
+            const targetBassNote = currentChord.notes[0].replace(/[0-9]/g, ""); // Remove octave
+            
+            if (selectedBassNote !== targetBassNote) {
+              const inversionText = inversion === 1 ? "1st" : 
+                                   inversion === 2 ? "2nd" : 
+                                   inversion === 3 ? "3rd" : `${inversion}th`;
+              
+              feedbackMsg += `Check the bottom note - this is a ${targetName} in ${inversionText} inversion with ${targetBassNote} in the bass.`;
             } else {
-              feedbackMsg += "Check your bass note.";
+              feedbackMsg += "Some of the notes aren't quite right.";
             }
-          } else {
-            feedbackMsg += "Some notes aren't quite right.";
           }
         } else {
-          feedbackMsg += "Try again!";
+          // Root position chord
+          feedbackMsg += `Try building the ${targetName} chord from the root up.`;
         }
       } else {
         feedbackMsg += "Try again!";
