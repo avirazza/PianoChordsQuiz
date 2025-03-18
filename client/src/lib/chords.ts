@@ -86,37 +86,20 @@ export const chordPatterns: ChordPattern[] = [
 function generateChordName(pattern: ChordPattern, rootNum: number): string {
   const rootName = getRootName(rootNum);
   
-  // For inversions, show as Root/Bass format
+  // For inversions, show as "ROOT CHORD-TYPE INV-TYPE" format
   if (pattern.inversion > 0) {
-    // Calculate the bass note (lowest note in the inversion)
-    let bassNoteNum = rootNum;
-    
-    // For a first inversion, the bass note is the third of the chord
+    // First inversion
     if (pattern.inversion === 1) {
-      if (pattern.type === 'major' || pattern.type === 'augmented') {
-        // Major third
-        bassNoteNum = ((rootNum + 4 - 1) % 12) + 1;
-      } else {
-        // Minor third
-        bassNoteNum = ((rootNum + 3 - 1) % 12) + 1;
-      }
+      return `${rootName}${pattern.display} 1st inv`;
     } 
-    // For a second inversion, the bass note is the fifth of the chord
+    // Second inversion
     else if (pattern.inversion === 2) {
-      if (pattern.type === 'augmented') {
-        // Augmented fifth
-        bassNoteNum = ((rootNum + 8 - 1) % 12) + 1;
-      } else if (pattern.type === 'diminished') {
-        // Diminished fifth
-        bassNoteNum = ((rootNum + 6 - 1) % 12) + 1;
-      } else {
-        // Perfect fifth
-        bassNoteNum = ((rootNum + 7 - 1) % 12) + 1;
-      }
+      return `${rootName}${pattern.display} 2nd inv`;
     }
-    
-    const bassName = getRootName(bassNoteNum);
-    return `${rootName}${pattern.display}/${bassName}`;
+    // In case we add other inversions in the future
+    else {
+      return `${rootName}${pattern.display} ${pattern.inversion}th inv`;
+    }
   }
   
   // Standard chord naming (non-inverted)
@@ -242,23 +225,20 @@ if (minorPattern) {
   chordsByDifficulty['level1'].push(createChordDef(5, minorPattern, idCounter++, 'level1')); // E minor
 }
 
-// Level 2: Major/Minor chords with all white and black keys
-rootsLevel2.forEach(rootNum => {
-  // For level 2, we'll focus on major triads for black key roots
-  // and minor triads for white key roots that weren't in level 1
-  
+// Level 2: Major and minor triads with white key roots only
+const whiteKeyRoots = [1, 3, 5, 6, 8, 10, 12]; // C, D, E, F, G, A, B
+
+whiteKeyRoots.forEach(rootNum => {
   const majorPattern = chordPatterns.find(p => p.type === 'major' && p.inversion === 0);
   if (majorPattern) {
-    if ([2, 3, 4, 5, 7, 9, 11].includes(rootNum)) { // C#, D, Eb, E, F#, Ab, Bb
-      chordsByDifficulty['level2'].push(createChordDef(rootNum, majorPattern, idCounter++, 'level2'));
-    }
+    // Add all white key major triads for level 2
+    chordsByDifficulty['level2'].push(createChordDef(rootNum, majorPattern, idCounter++, 'level2'));
   }
   
   const minorPattern = chordPatterns.find(p => p.type === 'minor' && p.inversion === 0);
   if (minorPattern) {
-    if (rootNum === 12) { // Only B minor for level 2
-      chordsByDifficulty['level2'].push(createChordDef(rootNum, minorPattern, idCounter++, 'level2'));
-    }
+    // Add all white key minor triads for level 2
+    chordsByDifficulty['level2'].push(createChordDef(rootNum, minorPattern, idCounter++, 'level2'));
   }
 });
 
@@ -277,12 +257,12 @@ rootsLevel3.forEach(rootNum => {
     chordsByDifficulty['level3'].push(createChordDef(rootNum, dimPattern, idCounter++, 'level3'));
   }
   
-  // Only add sus chords for C, F, and G
-  if (rootNum === 1 && sus2Pattern) {
+  // Add sus chords for all white key roots
+  if (sus2Pattern) {
     chordsByDifficulty['level3'].push(createChordDef(rootNum, sus2Pattern, idCounter++, 'level3'));
   }
   
-  if (rootNum === 3 && sus4Pattern) {
+  if (sus4Pattern) {
     chordsByDifficulty['level3'].push(createChordDef(rootNum, sus4Pattern, idCounter++, 'level3'));
   }
 });
