@@ -218,12 +218,90 @@ export function usePiano() {
     setSelectedNotes([]);
   }, []);
 
+  // Function to manually request MIDI access
+  const requestMIDIAccess = useCallback(() => {
+    console.log("Manually requesting MIDI access...");
+    if (navigator.requestMIDIAccess) {
+      navigator.requestMIDIAccess({ sysex: true })
+        .then((access) => {
+          console.log("MIDI Access manually granted:", access);
+          console.log("Number of inputs:", access.inputs.size);
+          
+          // Check if any MIDI inputs are available
+          if (access.inputs.size === 0) {
+            console.log("No MIDI inputs detected, but API access is available");
+            setMidiEnabled(false);
+            return;
+          }
+          
+          setMidiAccess(access);
+          setMidiEnabled(true);
+
+          // Log all available MIDI inputs
+          const inputMap = access.inputs;
+          console.log("Available MIDI Inputs:");
+          inputMap.forEach((input, id) => {
+            console.log(`- Input ID: ${id}, Name: ${input.name}, Manufacturer: ${input.manufacturer}, State: ${input.state}`);
+          });
+
+          // Set up listeners for MIDI inputs
+          const inputs = access.inputs.values();
+          let input = inputs.next();
+          while (!input.done) {
+            console.log(`Setting up MIDI listener for: ${input.value.name}`);
+            // Type assertion to handle missing property in type definition
+            (input.value as any).onmidimessage = onMIDIMessage;
+            input = inputs.next();
+          }
+
+          // Listen for connection/disconnection of MIDI devices
+          access.onstatechange = (event) => {
+            const port = event.port;
+            console.log(`MIDI port state change: ${port.name} (${port.type}) is now ${port.state}`);
+            
+            if (port.type === 'input') {
+              if (port.state === 'connected') {
+                console.log(`MIDI input connected: ${port.name}`);
+                // Type assertion to handle missing property in type definition
+                (port as any).onmidimessage = onMIDIMessage;
+                setMidiEnabled(true);
+              } else if (port.state === 'disconnected') {
+                console.log(`MIDI input disconnected: ${port.name}`);
+                // Check if we still have any connected inputs
+                let hasConnectedInputs = false;
+                const inputs = midiAccess?.inputs.values();
+                if (inputs) {
+                  let input = inputs.next();
+                  while (!input.done) {
+                    if (input.value.state === 'connected') {
+                      hasConnectedInputs = true;
+                      break;
+                    }
+                    input = inputs.next();
+                  }
+                }
+                setMidiEnabled(hasConnectedInputs);
+              }
+            }
+          };
+        })
+        .catch((error) => {
+          console.error("MIDI access denied or not supported in this browser:", error);
+          setMidiEnabled(false);
+        });
+    } else {
+      console.warn("Web MIDI API not supported in this browser");
+      setMidiEnabled(false);
+    }
+  }, [onMIDIMessage]);
+
   return {
     selectedNotes,
     playNote,
     playChord,
     toggleNoteSelection,
     clearSelectedNotes,
-    midiEnabled
+    midiEnabled,
+    requestMIDIAccess
   };
 }

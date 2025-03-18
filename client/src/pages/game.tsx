@@ -33,7 +33,8 @@ export default function Game() {
     clearSelectedNotes,
     toggleNoteSelection,
     playChord,
-    midiEnabled
+    midiEnabled,
+    requestMIDIAccess
   } = usePiano();
 
   // Get current chord
@@ -289,9 +290,17 @@ export default function Game() {
                 {/* MIDI Status Indicator */}
                 <div className="mt-2 flex items-center">
                   <div className={`inline-block w-2 h-2 rounded-full mr-2 ${midiEnabled ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                  <span className="text-xs text-neutral-dark/70">
+                  <span className="text-xs text-neutral-dark/70 mr-2">
                     MIDI {midiEnabled ? 'Connected' : 'Not Connected'}
                   </span>
+                  {!midiEnabled && (
+                    <button 
+                      onClick={requestMIDIAccess}
+                      className="text-xs px-2 py-1 bg-primary text-white rounded hover:bg-primary/90"
+                    >
+                      Connect MIDI
+                    </button>
+                  )}
                 </div>
               </div>
 
