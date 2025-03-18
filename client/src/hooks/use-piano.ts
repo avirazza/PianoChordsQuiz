@@ -28,8 +28,20 @@ export function usePiano() {
 
   // Handle MIDI note on message
   const onMIDIMessage = useCallback((event: WebMidi.MIDIMessageEvent) => {
-    // Log MIDI message received
-    console.log("MIDI message received:", event);
+    // Convert Uint8Array to regular array to fix iteration issues
+    const data = Array.from(event.data);
+    const command = data[0];
+    const note = data[1];
+    const velocity = data[2];
+    
+    // Skip sustain pedal and other control messages (CC messages are typically on channel 176-191)
+    if (command >= 176 && command <= 191) {
+      return;
+    }
+    
+    // Log MIDI message received but only for note-related messages
+    console.log("MIDI data received:", data);
+    console.log(`MIDI command: ${command}, note: ${note}, velocity: ${velocity}`);
     
     // Start audio context if suspended
     if (Tone.context.state !== "running") {
@@ -38,15 +50,6 @@ export function usePiano() {
     }
     
     const currentSynth = initSynth();
-    // Convert Uint8Array to regular array to fix iteration issues
-    const data = Array.from(event.data);
-    console.log("MIDI data received:", data);
-    
-    const command = data[0];
-    const note = data[1];
-    const velocity = data[2];
-    
-    console.log(`MIDI command: ${command}, note: ${note}, velocity: ${velocity}`);
     
     // Note on with velocity > 0
     if (command === 144 && velocity > 0) {
@@ -74,8 +77,10 @@ export function usePiano() {
       // Release the note but don't remove from selected notes
       // This lets the user build chords with MIDI keyboard
       currentSynth.triggerRelease(noteName);
-    } else {
-      console.log(`Unhandled MIDI command: ${command}`);
+    } 
+    // Ignore all other MIDI messages
+    else if (command !== 128 && command !== 144) {
+      console.log(`Ignoring MIDI command: ${command}`);
     }
   }, [initSynth, midiNoteToNoteName]);
 
