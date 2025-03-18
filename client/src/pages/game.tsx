@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, verifyChordMatch } from "@/lib/queryClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { type ChordData, type DifficultyLevel } from "@shared/schema";
 import Piano from "@/components/Piano";
@@ -8,7 +8,6 @@ import ChordChallenge from "@/components/ChordChallenge";
 import GameControls from "@/components/GameControls";
 import Instructions from "@/components/Instructions";
 import { usePiano } from "@/hooks/use-piano";
-import { checkChordMatch } from "@/lib/chords";
 import * as Tone from "tone";
 
 export default function Game() {
@@ -18,6 +17,10 @@ export default function Game() {
   const [showFeedback, setShowFeedback] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState("");
+
+  // Keep track of recently used chord indices and types (to prevent repetitive chords)
+  const [recentChordIndices, setRecentChordIndices] = useState<number[]>([]);
+  const [recentChordTypes, setRecentChordTypes] = useState<string[]>([]);
 
   // Fetch chords based on selected difficulty
   const { data: chords, isLoading, isError } = useQuery({
@@ -33,107 +36,6 @@ export default function Game() {
     playChord,
   } = usePiano();
 
-  // Function to handle playing the current chord
-  const handlePlayChord = useCallback(() => {
-    if (currentChord) {
-      // Always play original reference chord
-      playChord(currentChord.notes);
-      
-      // Provide visual feedback by highlighting the correct notes
-      // This doesn't force the user to use the same octave
-      clearSelectedNotes();
-      
-      // Briefly show the reference chord notes
-      setTimeout(() => {
-        // Clear the highlight after a short delay
-        clearSelectedNotes();
-      }, 1000);
-    }
-  }, [currentChord, playChord, clearSelectedNotes]);
-  
-  // Submit the user's answer
-  const handleSubmit = useCallback(() => {
-    if (!currentChord) return;
-    
-    // Use the checkChordMatch function from the chords library
-    // This handles the mathematical approach to chord matching
-    const correct = checkChordMatch(selectedNotes, currentChord.notes);
-    
-    setIsCorrect(correct);
-    setShowFeedback(true);
-    
-    if (correct) {
-      setFeedbackMessage("Correct! Well done!");
-      setScore(prevScore => prevScore + 10);
-      
-      // Submit score to the backend
-      apiRequest("POST", "/api/game-sessions", {
-        score: score + 10,
-        difficulty,
-        completedAt: new Date().toISOString()
-      });
-      
-      // Generate new chord after delay
-      setTimeout(generateNewChord, 1500);
-    } else {
-      setFeedbackMessage("Not quite right. Try again!");
-      
-      // Clear feedback after delay
-      setTimeout(() => {
-        setShowFeedback(false);
-      }, 2000);
-    }
-  }, [currentChord, selectedNotes, score, difficulty, generateNewChord]);
-
-  // Initialize Tone.js when the component mounts
-  useEffect(() => {
-    // Initialize Tone.js on first user interaction (required by browsers)
-    const handleFirstInteraction = () => {
-      if (Tone.context.state !== "running") {
-        console.log("Starting Tone.js audio context...");
-        Tone.start();
-        document.removeEventListener("click", handleFirstInteraction);
-        document.removeEventListener("keydown", handleFirstInteraction);
-      }
-    };
-    
-    document.addEventListener("click", handleFirstInteraction);
-    document.addEventListener("keydown", handleFirstInteraction);
-    
-    // Add keyboard shortcuts
-    const handleKeydown = (event: KeyboardEvent) => {
-      // Only handle keypresses if not in an input field
-      if (event.target instanceof HTMLInputElement || 
-          event.target instanceof HTMLTextAreaElement) {
-        return;
-      }
-      
-      switch (event.key) {
-        case 'Enter':
-          // Submit answer with Enter key
-          handleSubmit();
-          break;
-        case ' ': // Space key
-          // Play chord with Space key
-          event.preventDefault(); // Prevent page scrolling
-          handlePlayChord();
-          break;
-        case 'Backspace':
-          // Clear selected notes with Backspace key
-          clearSelectedNotes();
-          break;
-      }
-    };
-    
-    document.addEventListener('keydown', handleKeydown);
-    
-    return () => {
-      document.removeEventListener("click", handleFirstInteraction);
-      document.removeEventListener("keydown", handleFirstInteraction);
-      document.removeEventListener('keydown', handleKeydown);
-    };
-  }, [handleSubmit, handlePlayChord, clearSelectedNotes]);
-
   // Set a random chord when difficulty changes or when chords load
   useEffect(() => {
     if (chords && chords.length > 0) {
@@ -146,10 +48,6 @@ export default function Game() {
   const currentChord: ChordData | undefined = chords && chords.length > 0 
     ? chords[currentChordIndex] 
     : undefined;
-
-  // Keep track of recently used chord indices and types (to prevent repetitive chords)
-  const [recentChordIndices, setRecentChordIndices] = useState<number[]>([]);
-  const [recentChordTypes, setRecentChordTypes] = useState<string[]>([]);
   
   // Generate a new random chord - avoid repeating recent chords
   const generateNewChord = useCallback(() => {
@@ -228,8 +126,107 @@ export default function Game() {
       setShowFeedback(false);
     }
   }, [chords, recentChordIndices, recentChordTypes, clearSelectedNotes]);
+  
+  // Function to handle playing the current chord
+  const handlePlayChord = useCallback(() => {
+    if (currentChord) {
+      // Always play original reference chord
+      playChord(currentChord.notes);
+      
+      // Provide visual feedback by highlighting the correct notes
+      // This doesn't force the user to use the same octave
+      clearSelectedNotes();
+      
+      // Briefly show the reference chord notes
+      setTimeout(() => {
+        // Clear the highlight after a short delay
+        clearSelectedNotes();
+      }, 1000);
+    }
+  }, [currentChord, playChord, clearSelectedNotes]);
+  
+  // Submit the user's answer
+  const handleSubmit = useCallback(async () => {
+    if (!currentChord) return;
+    
+    // Use the server-side API for chord matching
+    // This handles the mathematical approach to chord matching
+    const correct = await verifyChordMatch(selectedNotes, currentChord.notes);
+    
+    setIsCorrect(correct);
+    setShowFeedback(true);
+    
+    if (correct) {
+      setFeedbackMessage("Correct! Well done!");
+      setScore(prevScore => prevScore + 10);
+      
+      // Submit score to the backend
+      apiRequest("POST", "/api/game-sessions", {
+        score: score + 10,
+        difficulty,
+        completedAt: new Date().toISOString()
+      });
+      
+      // Generate new chord after delay
+      setTimeout(generateNewChord, 1500);
+    } else {
+      setFeedbackMessage("Not quite right. Try again!");
+      
+      // Clear feedback after delay
+      setTimeout(() => {
+        setShowFeedback(false);
+      }, 2000);
+    }
+  }, [currentChord, selectedNotes, score, difficulty, generateNewChord]);
 
-  // These functions are defined with useCallback above
+  // Initialize Tone.js when the component mounts
+  useEffect(() => {
+    // Initialize Tone.js on first user interaction (required by browsers)
+    const handleFirstInteraction = () => {
+      if (Tone.context.state !== "running") {
+        console.log("Starting Tone.js audio context...");
+        Tone.start();
+        document.removeEventListener("click", handleFirstInteraction);
+        document.removeEventListener("keydown", handleFirstInteraction);
+      }
+    };
+    
+    document.addEventListener("click", handleFirstInteraction);
+    document.addEventListener("keydown", handleFirstInteraction);
+    
+    // Add keyboard shortcuts
+    const handleKeydown = (event: KeyboardEvent) => {
+      // Only handle keypresses if not in an input field
+      if (event.target instanceof HTMLInputElement || 
+          event.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+      
+      switch (event.key) {
+        case 'Enter':
+          // Submit answer with Enter key
+          handleSubmit();
+          break;
+        case ' ': // Space key
+          // Play chord with Space key
+          event.preventDefault(); // Prevent page scrolling
+          handlePlayChord();
+          break;
+        case 'Backspace':
+          // Clear selected notes with Backspace key
+          clearSelectedNotes();
+          break;
+      }
+    };
+    
+    document.addEventListener('keydown', handleKeydown);
+    
+    return () => {
+      document.removeEventListener("click", handleFirstInteraction);
+      document.removeEventListener("keydown", handleFirstInteraction);
+      document.removeEventListener('keydown', handleKeydown);
+    };
+  }, [handleSubmit, handlePlayChord, clearSelectedNotes]);
 
   return (
     <div className="bg-neutral-light min-h-screen font-inter text-neutral-dark">
@@ -268,7 +265,9 @@ export default function Game() {
                       <option value="level4">Level 4: All 12 Keys (Maj/Min/Aug/Dim)</option>
                       <option value="level5">Level 5: First Inversions</option>
                       <option value="level6">Level 6: Second Inversions</option>
-                      <option value="level7">Level 7: All Chords Review</option>
+                      <option value="level7">Level 7: All Triads & Inversions</option>
+                      <option value="level8">Level 8: Basic 7th Chords</option>
+                      <option value="level9">Level 9: Advanced 7th Chords</option>
                     </select>
                     <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-neutral-dark">
                       <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
