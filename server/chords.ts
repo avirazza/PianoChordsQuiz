@@ -975,12 +975,39 @@ export function checkChordMatch(
 
   // If we have chord data with scale degrees, we can perform more advanced comparison
   if (targetChord && targetChord.scaleDegrees) {
-    // Advanced check: For future use when we want to verify scale degrees match
-    // This helps ensure the chord is voiced correctly regardless of octave placement
-
-    // Example future implementation would be to analyze the user's chord against
-    // the expected scale degrees to ensure not just the right notes but the right
-    // functional representation of the chord
+    // Advanced check: Verify the scale degrees match, which ensures the chord is
+    // voiced correctly regardless of octave placement
+    
+    // Map each note in the user's chord to its position in the target chord
+    const userChordPositions = userNumeric.map(userNote => {
+      // Find this note's position in the target chord's noteNumbers
+      return targetChord.noteNumbers.findIndex(targetNote => 
+        targetNote === userNote
+      );
+    });
+    
+    // Verify each user chord position maps to the expected scale degree
+    let scaleDegreesMatch = true;
+    for (let i = 0; i < userChordPositions.length; i++) {
+      const position = userChordPositions[i];
+      if (position !== -1) {
+        // Check if this note's position corresponds to the expected scale degree
+        const expectedScaleDegree = targetChord.scaleDegrees[position];
+        
+        // If we can't find a scale degree for this position, it's an extra note
+        if (!expectedScaleDegree) {
+          scaleDegreesMatch = false;
+          break;
+        }
+      } else {
+        // Note not found in target chord
+        scaleDegreesMatch = false;
+        break;
+      }
+    }
+    
+    // At this point, we're just collecting extra data for future feedback
+    // but the validation has already succeeded based on the notes and bass note
   }
 
   // The chord has the same notes and the correct bottom note, so it's valid
