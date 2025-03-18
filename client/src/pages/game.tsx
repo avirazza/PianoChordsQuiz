@@ -84,33 +84,35 @@ export default function Game() {
   const handleSubmit = () => {
     if (!currentChord) return;
     
-    // Helper to extract just the note name without octave (e.g., "C" from "C4")
-    const getNoteWithoutOctave = (noteStr: string): string => {
-      return noteStr.replace(/[0-9]/g, '');
-    };
-    
-    // Helper to extract the octave number (e.g., "4" from "C4")
-    const getOctave = (noteStr: string): number => {
-      const match = noteStr.match(/(\d+)/);
-      return match ? parseInt(match[0]) : 0;
-    };
-    
-    // Get note names without octaves to check for correct notes
-    const correctNoteNames = currentChord.notes.map(getNoteWithoutOctave);
-    const userNoteNames = selectedNotes.map(getNoteWithoutOctave);
-    
-    // Check if the user has the right notes (regardless of octave)
-    const correctNoteSet = new Set(correctNoteNames);
-    const userNoteSet = new Set(userNoteNames);
-    
+    // Using the numeric approach for chord matching
     let correct = false;
     
-    // First check if the count matches
-    if (correctNoteSet.size === userNoteSet.size && userNoteSet.size === selectedNotes.length) {
-      // Then check if all correct notes are present (regardless of octave)
-      correct = Array.from(correctNoteSet).every(note => 
-        userNoteSet.has(note)
-      );
+    // Convert selected notes to numeric representation (1-12)
+    const selectedNoteNumbers = selectedNotes.map(noteStr => {
+      // Extract the note name without octave and convert to numeric value
+      const noteName = noteStr.replace(/[0-9]/g, '');
+      
+      // Note name to number mapping (1-12)
+      const noteToNumber: Record<string, number> = {
+        'C': 1, 'C#': 2, 'Db': 2, 
+        'D': 3, 'D#': 4, 'Eb': 4,
+        'E': 5, 'F': 6, 'F#': 7, 
+        'Gb': 7, 'G': 8, 'G#': 9,
+        'Ab': 9, 'A': 10, 'A#': 11,
+        'Bb': 11, 'B': 12
+      };
+      
+      return noteToNumber[noteName] || 0;
+    });
+    
+    // Sort both arrays for numeric comparison
+    const sortedSelected = [...selectedNoteNumbers].sort((a, b) => a - b);
+    const sortedChord = [...currentChord.noteNumbers].sort((a, b) => a - b);
+    
+    // Check if number of notes matches
+    if (sortedSelected.length === sortedChord.length) {
+      // Check if each note matches (ignoring octave)
+      correct = sortedSelected.every((note, index) => note === sortedChord[index]);
     }
     
     setIsCorrect(correct);

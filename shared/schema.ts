@@ -72,6 +72,7 @@ export type Note = {
 export type ChordData = {
   id: number;
   name: string;
-  notes: string[];
+  notes: string[];        // Note string representation for backward compatibility
+  noteNumbers: number[];  // Numeric note representation (1=C, 2=C#, ..., 12=B)
   difficulty: DifficultyLevel;
 };
