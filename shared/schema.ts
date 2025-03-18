@@ -59,7 +59,7 @@ export type InsertGameSession = z.infer<typeof insertGameSessionSchema>;
 export type GameSession = typeof gameSessions.$inferSelect;
 
 // Define types for chord difficulty levels
-export const difficultyLevels = ["beginner", "intermediate", "advanced"] as const;
+export const difficultyLevels = ["level1", "level2", "level3", "level4", "level5"] as const;
 export type DifficultyLevel = typeof difficultyLevels[number];
 
 // Define note type for client-server communication

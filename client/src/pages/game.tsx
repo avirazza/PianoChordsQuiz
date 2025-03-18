@@ -11,7 +11,7 @@ import { usePiano } from "@/hooks/use-piano";
 import * as Tone from "tone";
 
 export default function Game() {
-  const [difficulty, setDifficulty] = useState<DifficultyLevel>("beginner");
+  const [difficulty, setDifficulty] = useState<DifficultyLevel>("level1");
   const [score, setScore] = useState(0);
   const [currentChordIndex, setCurrentChordIndex] = useState(0);
   const [showFeedback, setShowFeedback] = useState(false);
@@ -84,16 +84,33 @@ export default function Game() {
   const handleSubmit = () => {
     if (!currentChord) return;
     
-    // Check if selected notes exactly match chord notes (including octaves)
-    const correctNotes = new Set(currentChord.notes);
-    const userNotes = new Set(selectedNotes);
+    // Helper to extract just the note name without octave (e.g., "C" from "C4")
+    const getNoteWithoutOctave = (noteStr: string): string => {
+      return noteStr.replace(/[0-9]/g, '');
+    };
+    
+    // Helper to extract the octave number (e.g., "4" from "C4")
+    const getOctave = (noteStr: string): number => {
+      const match = noteStr.match(/(\d+)/);
+      return match ? parseInt(match[0]) : 0;
+    };
+    
+    // Get note names without octaves to check for correct notes
+    const correctNoteNames = currentChord.notes.map(getNoteWithoutOctave);
+    const userNoteNames = selectedNotes.map(getNoteWithoutOctave);
+    
+    // Check if the user has the right notes (regardless of octave)
+    const correctNoteSet = new Set(correctNoteNames);
+    const userNoteSet = new Set(userNoteNames);
     
     let correct = false;
     
     // First check if the count matches
-    if (correctNotes.size === userNotes.size) {
-      // Then check if all the correct notes are present
-      correct = Array.from(correctNotes).every(note => userNotes.has(note));
+    if (correctNoteSet.size === userNoteSet.size && userNoteSet.size === selectedNotes.length) {
+      // Then check if all correct notes are present (regardless of octave)
+      correct = Array.from(correctNoteSet).every(note => 
+        userNoteSet.has(note)
+      );
     }
     
     setIsCorrect(correct);
@@ -171,9 +188,11 @@ export default function Game() {
                       value={difficulty}
                       onChange={(e) => setDifficulty(e.target.value as DifficultyLevel)}
                     >
-                      <option value="beginner">Beginner</option>
-                      <option value="intermediate">Intermediate</option>
-                      <option value="advanced">Advanced</option>
+                      <option value="level1">Level 1: White Key Triads</option>
+                      <option value="level2">Level 2: White Key Root + Black Keys</option>
+                      <option value="level3">Level 3: Sus, Aug, Dim Chords</option>
+                      <option value="level4">Level 4: All 12 Keys</option>
+                      <option value="level5">Level 5: Inversions</option>
                     </select>
                     <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-neutral-dark">
                       <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
