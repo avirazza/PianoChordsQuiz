@@ -216,51 +216,134 @@ export default function Game() {
         const targetName = result.targetChord.name;
         const rootNote = result.targetChord.rootNote;
         const inversion = result.targetChord.inversion;
+        const scaleDegrees = result.targetChord.scaleDegrees;
         
-        // Identify the scale degrees in the selected notes
-        const selectedNoteNumbers = selectedNotes.map(noteStr => {
-          const noteName = noteStr.replace(/[0-9]/g, "");
-          return noteToNumeric(noteName);
+        // Extract user notes with octaves for correct analysis
+        const userNotesWithOctaves = selectedNotes.map((noteStr) => {
+          const noteName = noteStr.replace(/[0-9]/g, ""); // Remove octave
+          const octave = parseInt(noteStr.match(/[0-9]+/)?.[0] || "4", 10);
+          const noteNum = noteToNumeric(noteName);
+          return { note: noteNum, octave };
         });
         
-        // Check if we're missing the root note (the "1" scale degree)
-        const scaleDegrees = result.targetChord.scaleDegrees;
-        const rootScaleDegreePosition = Object.entries(scaleDegrees)
-          .find(([_, degree]) => degree === "1")?.[0];
+        // Sort by octave (lowest to highest)
+        userNotesWithOctaves.sort((a, b) => {
+          if (a.octave !== b.octave) return a.octave - b.octave;
+          return a.note - b.note;
+        });
         
-        if (rootScaleDegreePosition) {
-          const rootNoteValue = rootNote; // Numeric value of the root (1-12)
-          const hasRootNote = selectedNoteNumbers.includes(rootNoteValue);
+        // Extract just the pitch classes of the user's notes in order from bass to soprano
+        const userPitchClasses = userNotesWithOctaves.map(n => n.note);
+        
+        // Identify which scale degrees are present and which are missing
+        if (scaleDegrees) {
+          // Create a set of the expected notes based on scale degrees
+          const expectedNotes = new Set(
+            Object.values(scaleDegrees).map(degree => {
+              // Convert scale degree to semitones, then to note number
+              const semitones = scaleDegreeToSemitone(degree);
+              return getNoteFromSemitone(semitones, rootNote);
+            })
+          );
           
-          if (!hasRootNote) {
-            feedbackMsg += `You're missing the root note (${numericToNote(rootNoteValue, 4)}) of the chord. `;
-          }
-        }
-        
-        // Check inversion
-        if (inversion > 0) {
-          // This is an inverted chord
-          if (selectedNotes.length > 0 && currentChord.notes.length > 0) {
-            const selectedBassNote = selectedNotes[0].replace(/[0-9]/g, ""); // Remove octave
-            const targetBassNote = currentChord.notes[0].replace(/[0-9]/g, ""); // Remove octave
-            
-            if (selectedBassNote !== targetBassNote) {
-              const inversionText = inversion === 1 ? "1st" : 
-                                   inversion === 2 ? "2nd" : 
-                                   inversion === 3 ? "3rd" : `${inversion}th`;
-              
-              feedbackMsg += `Check the bottom note - this is a ${targetName} in ${inversionText} inversion with ${targetBassNote} in the bass.`;
-            } else {
-              feedbackMsg += "Some of the notes aren't quite right.";
+          // Create a set of the user's notes
+          const userNotes = new Set(userPitchClasses);
+          
+          // Find missing notes by set difference
+          const missingNotes: number[] = [];
+          Array.from(expectedNotes).forEach(note => {
+            if (!userNotes.has(note)) {
+              missingNotes.push(note);
             }
+          });
+          
+          // Check if root note is missing
+          const rootScaleDegreeValue = Object.entries(scaleDegrees)
+            .find(([_, degree]) => degree === "1")?.[0];
+          
+          if (rootScaleDegreeValue && missingNotes.includes(rootNote)) {
+            feedbackMsg += `You're missing the root note (${numericToNote(rootNote, 4)}) of the chord. `;
+          } else if (missingNotes.length > 0) {
+            feedbackMsg += `You're missing one or more notes of the chord. `;
+          }
+          
+          // Check for wrong inversion
+          if (inversion > 0) {
+            // For inverted chords, check if the correct note is in the bass position
+            const bassScaleDegree = Object.entries(scaleDegrees)
+              .find(([position, _]) => parseInt(position) === inversion)?.[1];
+              
+            if (bassScaleDegree) {
+              const bassSemitone = scaleDegreeToSemitone(bassScaleDegree);
+              const expectedBassNote = getNoteFromSemitone(bassSemitone, rootNote);
+              
+              if (userPitchClasses.length > 0 && userPitchClasses[0] !== expectedBassNote) {
+                const inversionText = inversion === 1 ? "1st" : 
+                                     inversion === 2 ? "2nd" : 
+                                     inversion === 3 ? "3rd" : `${inversion}th`;
+                                
+                const bassNoteStr = numericToNote(expectedBassNote, 4);
+                feedbackMsg += `Check the bottom note - this is a ${targetName} in ${inversionText} inversion with ${bassNoteStr} in the bass.`;
+              }
+            }
+          } else if (userPitchClasses.length > 0 && userPitchClasses[0] !== rootNote) {
+            // For root position, root should be in the bass
+            feedbackMsg += `In root position, ${numericToNote(rootNote, 4)} should be the bottom note.`;
+          }
+          
+          // If no specific issues found but still incorrect
+          if (feedbackMsg === "Not quite right. ") {
+            feedbackMsg += `Try building the ${targetName} chord correctly.`;
           }
         } else {
-          // Root position chord
+          // No scale degree information available
           feedbackMsg += `Try building the ${targetName} chord from the root up.`;
         }
       } else {
         feedbackMsg += "Try again!";
       }
+      
+      // Helper function to convert scale degree to semitone offset
+      const scaleDegreeToSemitone = (scaleDegree: string): number => {
+        // Parse the scale degree into a normalized form
+        const degree = scaleDegree.replace(/[b#]/g, "");  // Remove flats/sharps
+        const flatCount = (scaleDegree.match(/b/g) || []).length;
+        const sharpCount = (scaleDegree.match(/#/g) || []).length;
+        
+        // Calculate semitone offset based on the scale degree
+        let semitones = 0;
+        switch(degree) {
+          case "1": semitones = 0; break;  // Root/Unison
+          case "2": semitones = 2; break;  // Major 2nd
+          case "3": semitones = 4; break;  // Major 3rd
+          case "4": semitones = 5; break;  // Perfect 4th
+          case "5": semitones = 7; break;  // Perfect 5th
+          case "6": semitones = 9; break;  // Major 6th
+          case "7": semitones = 11; break; // Major 7th
+          default: semitones = 0;          // Default to root if unknown
+        }
+        
+        // Apply flats and sharps
+        semitones = semitones - flatCount + sharpCount;
+        
+        // Normalize to range 0-11
+        while (semitones < 0) semitones += 12;
+        while (semitones >= 12) semitones -= 12;
+        
+        return semitones;
+      };
+      
+      // Helper function to convert semitone offset to a note value
+      const getNoteFromSemitone = (semitones: number, rootNote: number): number => {
+        // Calculate note by adding semitones to root note
+        let note = rootNote + semitones;
+        
+        // Normalize to range 1-12
+        while (note > 12) note -= 12;
+        while (note < 1) note += 12;
+        
+        return note;
+      };
       
       setFeedbackMessage(feedbackMsg);
       

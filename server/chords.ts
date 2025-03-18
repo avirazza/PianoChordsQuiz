@@ -609,7 +609,7 @@ export function generateNoteStrings(
   return noteStrings;
 }
 
-// Create a complete chord definition
+// Create a complete chord definition with proper scale degree mapping
 export function createChordDefinition(
   rootNum: number,
   pattern: ChordPattern,
@@ -620,22 +620,38 @@ export function createChordDefinition(
   const notes = generateNoteStrings(rootNum, pattern);
   const noteNumbers = notes.map(noteToNumeric);
   
-  // Add scale degrees mapping based on the pattern's scale degree map
-  // This maps each note to its scale degree relative to the root
+  // This maps each note position to its scale degree relative to the root
   const scaleDegrees: Record<number, string> = {};
   
-  // Calculate the actual notes from the root and intervals
-  const actualNotes = calculateChordNotes(rootNum, pattern.intervals);
+  // Calculate the actual notes from the root and intervals (before inversion)
+  const baseNotes = calculateChordNotes(rootNum, pattern.intervals);
   
-  // Map each note to its scale degree
-  actualNotes.forEach((noteNum, index) => {
-    // The interval is used as a key in the scaleDegreeMap
+  // First map the scale degrees for the un-inverted chord (root position)
+  const baseScaleDegrees: Record<number, string> = {};
+  baseNotes.forEach((noteNum, index) => {
     const interval = pattern.intervals[index];
     const scaleDegree = pattern.scaleDegreeMap[interval];
-    
-    // Use the position in the sequence (0, 1, 2, 3) as the key in scaleDegrees
-    scaleDegrees[index] = scaleDegree;
+    baseScaleDegrees[index] = scaleDegree;
   });
+  
+  // Now adjust for inversions - we need to remap the scale degrees based on the new bass note
+  if (pattern.inversion === 0) {
+    // Root position - scale degrees stay the same
+    Object.assign(scaleDegrees, baseScaleDegrees);
+  } else {
+    // For inversions, we need to rotate the scale degrees
+    // In an inversion, the order of notes changes, but their scale degrees don't
+    const chordSize = baseNotes.length;
+    
+    // For each position in the inverted chord, map to the correct scale degree
+    for (let i = 0; i < chordSize; i++) {
+      // Calculate the position in the original chord
+      // For a 1st inversion of a triad, the notes would be rearranged from [0,1,2] to [1,2,0]
+      // So position 0 in the inverted chord maps to position 1 in the original chord
+      const originalPosition = (i + pattern.inversion) % chordSize;
+      scaleDegrees[i] = baseScaleDegrees[originalPosition];
+    }
+  }
 
   return {
     id,
@@ -907,14 +923,12 @@ export function getAllChords(): ChordData[] {
 }
 
 /**
- * Helper function to convert a scale degree (like "1", "b3", "#5") to a numeric note value
- * given a root note
+ * Helper function to convert a scale degree (like "1", "b3", "#5") to a semitone offset
  * 
  * @param scaleDegree The scale degree (like "1", "b3", "#5", "b7")
- * @param rootNote The numeric root note (1-12, where 1=C)
- * @returns The numeric note value (1-12)
+ * @returns The semitone offset from the root
  */
-export function scaleDegreesToNote(scaleDegree: string, rootNote: number): number {
+export function scaleDegreeToSemitones(scaleDegree: string): number {
   // Parse the scale degree into a normalized form
   const degree = scaleDegree.replace(/[b#]/g, "");  // Remove flats/sharps to get the base degree
   const flatCount = (scaleDegree.match(/b/g) || []).length;
@@ -938,7 +952,23 @@ export function scaleDegreesToNote(scaleDegree: string, rootNote: number): numbe
   // Apply flats and sharps
   semitones = semitones - flatCount + sharpCount;
   
-  // Combine with root note to get the actual note value
+  // Normalize to range 0-11
+  while (semitones < 0) semitones += 12;
+  while (semitones >= 12) semitones -= 12;
+  
+  return semitones;
+}
+
+/**
+ * Helper function to convert a semitone offset to a numeric note value
+ * given a root note
+ * 
+ * @param semitones The semitone offset from the root (0-11)
+ * @param rootNote The numeric root note (1-12, where 1=C)
+ * @returns The numeric note value (1-12)
+ */
+export function semitonesToNote(semitones: number, rootNote: number): number {
+  // Add semitones to the root note
   let note = rootNote + semitones;
   
   // Normalize to range 1-12
@@ -949,9 +979,10 @@ export function scaleDegreesToNote(scaleDegree: string, rootNote: number): numbe
 }
 
 /**
- * Compare two chords to see if they match, with a focus on scale degrees rather than bass note
- * This is a mathematical approach that identifies chords by their internal structure rather than
- * note order or inversion
+ * Compare two chords to see if they match, using the scale degree approach
+ * This accurately identifies chords regardless of inversion by checking:
+ * 1. The set of notes (pitch classes) matches
+ * 2. The correct inversion based on actual scale degrees (not just bass note)
  *
  * @param userNotes Array of note strings (e.g. ["C4", "E4", "G4"])
  * @param targetNotes Array of note strings for the target chord
@@ -966,75 +997,96 @@ export function checkChordMatch(
   // If we don't have the target chord data with scale degrees, we can't do proper matching
   if (!targetChord || !targetChord.scaleDegrees) {
     // Fall back to simpler matching based just on the note values
-    const userNumeric = userNotes.map(noteToNumeric).sort((a, b) => a - b);
-    const targetNumeric = targetNotes.map(noteToNumeric).sort((a, b) => a - b);
+    const userPitchClasses = userNotes.map(noteToNumeric).sort((a, b) => a - b);
+    const targetPitchClasses = targetNotes.map(noteToNumeric).sort((a, b) => a - b);
     
-    // Check if we have the same notes regardless of order
-    for (let i = 0; i < userNumeric.length; i++) {
-      if (userNumeric[i] !== targetNumeric[i]) {
+    // Check if the sets of pitch classes match, ignoring octaves and note order
+    if (userPitchClasses.length !== targetPitchClasses.length) {
+      return false;
+    }
+    
+    for (let i = 0; i < userPitchClasses.length; i++) {
+      if (userPitchClasses[i] !== targetPitchClasses[i]) {
         return false;
       }
     }
     return true;
   }
   
-  // Advanced matching based on scale degrees
-  const rootNote = targetChord.rootNote;
-  const scaleDegrees = targetChord.scaleDegrees;
+  // Advanced scale-degree-based matching
+  const rootNote = targetChord.rootNote; // The numeric root note value (1-12)
+  const chordScaleDegrees = targetChord.scaleDegrees; // Mapping of note positions to scale degrees
   
-  // Convert scale degrees to expected note numbers
-  const expectedNotesByDegree = Object.values(scaleDegrees).map(degree => 
-    scaleDegreesToNote(degree, rootNote)
-  );
+  // Extract user notes with octaves to arrange from lowest to highest
+  const userNotesWithOctaves = userNotes.map((noteStr) => {
+    const noteName = noteStr.replace(/[0-9]/g, ""); // Remove octave
+    const octave = parseInt(noteStr.match(/[0-9]+/)?.[0] || "4", 10);
+    const noteNum = noteToNumeric(noteName);
+    return { note: noteNum, octave };
+  });
   
-  // Get the actual notes the user played, ignoring octaves
-  const userNoteNumbers = userNotes.map(noteToNumeric);
+  // Sort by octave (lowest to highest), then by note value within the same octave
+  userNotesWithOctaves.sort((a, b) => {
+    if (a.octave !== b.octave) return a.octave - b.octave;
+    return a.note - b.note;
+  });
   
-  // Make sure we have the right number of notes
-  if (userNoteNumbers.length !== expectedNotesByDegree.length) {
+  // Extract just the pitch classes (1-12) of the user's notes in order from bass to soprano
+  const userPitchClasses = userNotesWithOctaves.map(n => n.note);
+  
+  // Step 1: Make sure we have all the required notes for the chord (pitch class set match)
+  // Convert the target chord's scale degrees to expected note values
+  const expectedSemitones = Object.values(chordScaleDegrees).map(scaleDegreeToSemitones);
+  const expectedNotes = expectedSemitones.map(semitones => semitonesToNote(semitones, rootNote));
+  
+  // Check if all expected notes are present in the user's chord (ignoring order)
+  const userPitchClassSet = new Set(userPitchClasses);
+  for (const expectedNote of expectedNotes) {
+    if (!userPitchClassSet.has(expectedNote)) {
+      return false; // Missing a required note
+    }
+  }
+  
+  // Make sure the user didn't play any extra notes
+  if (userPitchClasses.length !== expectedNotes.length) {
     return false;
   }
   
-  // Sort both collections to compare regardless of order
-  const sortedUserNotes = [...userNoteNumbers].sort((a, b) => a - b);
-  const sortedExpectedNotes = [...expectedNotesByDegree].sort((a, b) => a - b);
-  
-  // Now compare the actual notes with the expected notes
-  for (let i = 0; i < sortedUserNotes.length; i++) {
-    if (sortedUserNotes[i] !== sortedExpectedNotes[i]) {
-      return false; // The notes don't match the expected scale degrees
+  // Step 2: For inverted chords, check if the inversion matches based on scale degrees
+  if (targetChord.inversion > 0) {
+    // Get the scale degree that should be in the bass for this inversion
+    // For a 1st inversion, the 3rd is in the bass; for 2nd inversion, the 5th is in the bass, etc.
+    let bassScaleDegree = "";
+    for (const [pos, degree] of Object.entries(chordScaleDegrees)) {
+      if (parseInt(pos) === targetChord.inversion) {
+        bassScaleDegree = degree;
+        break;
+      }
+    }
+    
+    if (bassScaleDegree) {
+      // Convert the expected bass scale degree to a note value
+      const bassSemitones = scaleDegreeToSemitones(bassScaleDegree);
+      const expectedBassNote = semitonesToNote(bassSemitones, rootNote);
+      
+      // Check if the user's bass note matches the expected bass note
+      if (userPitchClasses[0] !== expectedBassNote) {
+        return false; // Wrong bass note for this inversion
+      }
+    }
+  } else {
+    // For root position chords, the root note should be in the bass
+    const rootScaleDegree = Object.entries(chordScaleDegrees)
+      .find(([_, degree]) => degree === "1")?.[0];
+      
+    if (rootScaleDegree) {
+      // For root position, the root note should be in the bass
+      if (userPitchClasses[0] !== rootNote) {
+        return false; // Root note not in the bass for a root position chord
+      }
     }
   }
   
-  // If we have an inversion requirement and there's a bass note specified
-  if (targetChord.inversion > 0 && targetChord.notes.length > 0) {
-    // Get the expected bass note (first note in the target)
-    const expectedBassNote = noteToNumeric(targetChord.notes[0]);
-    
-    // Extract the actual bass note (lowest by octave) from user input
-    const userNotesWithOctaves = userNotes.map((noteStr) => {
-      const noteName = noteStr.replace(/[0-9]/g, "");
-      const octave = parseInt(noteStr.match(/[0-9]+/)?.[0] || "4", 10);
-      return {
-        note: noteToNumber[noteName] || 0,
-        octave,
-      };
-    });
-    
-    // Sort by octave to find the lowest note
-    userNotesWithOctaves.sort((a, b) => {
-      if (a.octave !== b.octave) return a.octave - b.octave;
-      return a.note - b.note;
-    });
-    
-    const userBassNote = userNotesWithOctaves[0].note;
-    
-    // Check if the bass note matches the expected bass note
-    if (userBassNote !== expectedBassNote) {
-      return false; // Wrong bass note for this inversion
-    }
-  }
-  
-  // If we get here, the chord matches both in terms of the notes and the inversion
+  // If we reach here, the chord matches in terms of both pitch class content and inversion
   return true;
 }
