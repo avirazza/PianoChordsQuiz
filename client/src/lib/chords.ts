@@ -1,10 +1,24 @@
-import { type ChordData, type DifficultyLevel } from "@shared/schema";
+import { type ChordData, type DifficultyLevel, difficultyLevels } from "@shared/schema";
 
-// Chord data structure
-interface ChordDefinition {
-  name: string;
-  notes: string[];          // Traditional note representation ('C4', 'E4', etc.)
-  noteNumbers: number[];    // Numeric representation (1=C, 2=C#, ..., 12=B)
+// CHORD TYPE DEFINITIONS
+
+// Chord pattern definitions - these are the different chord types regardless of root note
+export interface ChordPattern {
+  type: string;                 // 'major', 'minor', 'augmented', 'diminished', 'sus2', 'sus4', etc.
+  display: string;              // How to display this chord type (e.g., '', 'm', 'aug', 'dim')
+  intervals: number[];          // Intervals in semitones from root (0 = root)
+  inversion: number;            // 0 = root position, 1 = first inversion, 2 = second inversion, etc.
+  inversionDisplay?: string;    // How to display the inversion (e.g., '1st inv', '2nd inv')
+}
+
+// A complete chord with a specific root and pattern
+export interface ChordDefinition {
+  id: number;
+  rootNum: number;              // Numeric root (1=C, 2=C#, ..., 12=B)
+  pattern: ChordPattern;        // The chord pattern/type
+  name: string;                 // Generated name (e.g., 'C', 'Cm', 'G/B')
+  notes: string[];              // Traditional note representation ('C4', 'E4', etc.)
+  noteNumbers: number[];        // Numeric representation (1=C, 2=C#, ..., 12=B)
   difficulty: DifficultyLevel;
 }
 
@@ -17,6 +31,8 @@ const noteToNumber: Record<string, number> = {
   'Ab': 9, 'A': 10, 'A#': 11,
   'Bb': 11,'B': 12
 };
+
+// UTILITY FUNCTIONS
 
 // Convert a note string (e.g., 'C4') to a numeric value (1-12)
 export function noteToNumeric(noteStr: string): number {
@@ -33,109 +49,368 @@ export function numericToNote(noteNum: number, octave: number): string {
   return `${noteNames[index]}${octave}`;
 }
 
-// Chord definitions for each level, as specified
-export const chordDefinitions: ChordDefinition[] = [
-  // Level 1: Major and minor triads with simplified naming
-  { name: 'C', notes: ['C4', 'E4', 'G4'], noteNumbers: [1, 5, 8], difficulty: 'level1' },
-  { name: 'Cm', notes: ['C4', 'Eb4', 'G4'], noteNumbers: [1, 4, 8], difficulty: 'level1' },
-  { name: 'F', notes: ['F4', 'A4', 'C5'], noteNumbers: [6, 10, 1], difficulty: 'level1' },
-  { name: 'Fm', notes: ['F4', 'Ab4', 'C5'], noteNumbers: [6, 9, 1], difficulty: 'level1' },
-  { name: 'G', notes: ['G4', 'B4', 'D5'], noteNumbers: [8, 12, 3], difficulty: 'level1' },
-  { name: 'Gm', notes: ['G4', 'Bb4', 'D5'], noteNumbers: [8, 11, 3], difficulty: 'level1' },
-  { name: 'Am', notes: ['A4', 'C5', 'E5'], noteNumbers: [10, 1, 5], difficulty: 'level1' },
-  { name: 'Dm', notes: ['D4', 'F4', 'A4'], noteNumbers: [3, 6, 10], difficulty: 'level1' },
-  { name: 'Em', notes: ['E4', 'G4', 'B4'], noteNumbers: [5, 8, 12], difficulty: 'level1' },
-  
-  // Level 2: Major and minor chords with all white and black keys
-  { name: 'D', notes: ['D4', 'F#4', 'A4'], noteNumbers: [3, 7, 10], difficulty: 'level2' },
-  { name: 'E', notes: ['E4', 'G#4', 'B4'], noteNumbers: [5, 9, 12], difficulty: 'level2' },
-  { name: 'A', notes: ['A4', 'C#5', 'E5'], noteNumbers: [10, 2, 5], difficulty: 'level2' },
-  { name: 'Bm', notes: ['B4', 'D5', 'F#5'], noteNumbers: [12, 3, 7], difficulty: 'level2' },
-  { name: 'Eb', notes: ['Eb4', 'G4', 'Bb4'], noteNumbers: [4, 8, 11], difficulty: 'level2' },
-  { name: 'Ab', notes: ['Ab4', 'C5', 'Eb5'], noteNumbers: [9, 1, 4], difficulty: 'level2' },
-  { name: 'Bb', notes: ['Bb4', 'D5', 'F5'], noteNumbers: [11, 3, 6], difficulty: 'level2' },
-  { name: 'C#', notes: ['C#4', 'F4', 'G#4'], noteNumbers: [2, 6, 9], difficulty: 'level2' },
-  { name: 'F#', notes: ['F#4', 'A#4', 'C#5'], noteNumbers: [7, 11, 2], difficulty: 'level2' },
-  
-  // Level 3: Augmented and Diminished chords
-  { name: 'Caug', notes: ['C4', 'E4', 'G#4'], noteNumbers: [1, 5, 9], difficulty: 'level3' },
-  { name: 'Cdim', notes: ['C4', 'Eb4', 'Gb4'], noteNumbers: [1, 4, 7], difficulty: 'level3' },
-  { name: 'Daug', notes: ['D4', 'F#4', 'A#4'], noteNumbers: [3, 7, 11], difficulty: 'level3' },
-  { name: 'Ddim', notes: ['D4', 'F4', 'Ab4'], noteNumbers: [3, 6, 9], difficulty: 'level3' },
-  { name: 'Eaug', notes: ['E4', 'G#4', 'C5'], noteNumbers: [5, 9, 1], difficulty: 'level3' },
-  { name: 'Edim', notes: ['E4', 'G4', 'Bb4'], noteNumbers: [5, 8, 11], difficulty: 'level3' },
-  { name: 'Faug', notes: ['F4', 'A4', 'C#5'], noteNumbers: [6, 10, 2], difficulty: 'level3' },
-  { name: 'Fdim', notes: ['F4', 'Ab4', 'B4'], noteNumbers: [6, 9, 12], difficulty: 'level3' },
-  { name: 'Gaug', notes: ['G4', 'B4', 'D#5'], noteNumbers: [8, 12, 4], difficulty: 'level3' },
-  { name: 'Gdim', notes: ['G4', 'Bb4', 'Db5'], noteNumbers: [8, 11, 2], difficulty: 'level3' },
-  { name: 'Aaug', notes: ['A4', 'C#5', 'F5'], noteNumbers: [10, 2, 6], difficulty: 'level3' },
-  { name: 'Adim', notes: ['A4', 'C5', 'Eb5'], noteNumbers: [10, 1, 4], difficulty: 'level3' },
-  
-  // Level 4: Augmented, Diminished and Sus chords with black keys
-  { name: 'C#aug', notes: ['C#4', 'F4', 'A4'], noteNumbers: [2, 6, 10], difficulty: 'level4' },
-  { name: 'C#dim', notes: ['C#4', 'E4', 'G4'], noteNumbers: [2, 5, 8], difficulty: 'level4' },
-  { name: 'Ebaug', notes: ['Eb4', 'G4', 'B4'], noteNumbers: [4, 8, 12], difficulty: 'level4' },
-  { name: 'Ebdim', notes: ['Eb4', 'Gb4', 'A4'], noteNumbers: [4, 7, 10], difficulty: 'level4' },
-  { name: 'F#aug', notes: ['F#4', 'A#4', 'D5'], noteNumbers: [7, 11, 3], difficulty: 'level4' },
-  { name: 'F#dim', notes: ['F#4', 'A4', 'C5'], noteNumbers: [7, 10, 1], difficulty: 'level4' },
-  { name: 'Abaug', notes: ['Ab4', 'C5', 'E5'], noteNumbers: [9, 1, 5], difficulty: 'level4' },
-  { name: 'Abdim', notes: ['Ab4', 'B4', 'D5'], noteNumbers: [9, 12, 3], difficulty: 'level4' },
-  { name: 'Bbaug', notes: ['Bb4', 'D5', 'F#5'], noteNumbers: [11, 3, 7], difficulty: 'level4' },
-  { name: 'Bbdim', notes: ['Bb4', 'Db5', 'E5'], noteNumbers: [11, 2, 5], difficulty: 'level4' },
-  { name: 'Csus2', notes: ['C4', 'D4', 'G4'], noteNumbers: [1, 3, 8], difficulty: 'level4' },
-  { name: 'Csus4', notes: ['C4', 'F4', 'G4'], noteNumbers: [1, 6, 8], difficulty: 'level4' },
-  { name: 'Dsus2', notes: ['D4', 'E4', 'A4'], noteNumbers: [3, 5, 10], difficulty: 'level4' },
-  { name: 'Dsus4', notes: ['D4', 'G4', 'A4'], noteNumbers: [3, 8, 10], difficulty: 'level4' },
-  
-  // Level 5: First inversions only
-  { name: 'C/E', notes: ['E4', 'G4', 'C5'], noteNumbers: [5, 8, 1], difficulty: 'level5' },
-  { name: 'G/B', notes: ['B4', 'D5', 'G5'], noteNumbers: [12, 3, 8], difficulty: 'level5' },
-  { name: 'F/A', notes: ['A4', 'C5', 'F5'], noteNumbers: [10, 1, 6], difficulty: 'level5' },
-  { name: 'D/F#', notes: ['F#4', 'A4', 'D5'], noteNumbers: [7, 10, 3], difficulty: 'level5' },
-  { name: 'Am/C', notes: ['C4', 'E4', 'A4'], noteNumbers: [1, 5, 10], difficulty: 'level5' },
-  { name: 'Em/G', notes: ['G4', 'B4', 'E5'], noteNumbers: [8, 12, 5], difficulty: 'level5' },
-  { name: 'Dm/F', notes: ['F4', 'A4', 'D5'], noteNumbers: [6, 10, 3], difficulty: 'level5' },
-  { name: 'Cm/Eb', notes: ['Eb4', 'G4', 'C5'], noteNumbers: [4, 8, 1], difficulty: 'level5' },
-  { name: 'Gm/Bb', notes: ['Bb4', 'D5', 'G5'], noteNumbers: [11, 3, 8], difficulty: 'level5' },
-  { name: 'Fm/Ab', notes: ['Ab4', 'C5', 'F5'], noteNumbers: [9, 1, 6], difficulty: 'level5' },
-  
-  // Level 6: Second inversions only
-  { name: 'C/G', notes: ['G4', 'C5', 'E5'], noteNumbers: [8, 1, 5], difficulty: 'level6' },
-  { name: 'G/D', notes: ['D4', 'G4', 'B4'], noteNumbers: [3, 8, 12], difficulty: 'level6' },
-  { name: 'F/C', notes: ['C4', 'F4', 'A4'], noteNumbers: [1, 6, 10], difficulty: 'level6' },
-  { name: 'D/A', notes: ['A4', 'D5', 'F#5'], noteNumbers: [10, 3, 7], difficulty: 'level6' },
-  { name: 'Am/E', notes: ['E4', 'A4', 'C5'], noteNumbers: [5, 10, 1], difficulty: 'level6' },
-  { name: 'Em/B', notes: ['B4', 'E5', 'G5'], noteNumbers: [12, 5, 8], difficulty: 'level6' },
-  { name: 'Dm/A', notes: ['A4', 'D5', 'F5'], noteNumbers: [10, 3, 6], difficulty: 'level6' },
-  { name: 'Cm/G', notes: ['G4', 'C5', 'Eb5'], noteNumbers: [8, 1, 4], difficulty: 'level6' },
-  { name: 'Gm/D', notes: ['D4', 'G4', 'Bb4'], noteNumbers: [3, 8, 11], difficulty: 'level6' },
-  { name: 'Fm/C', notes: ['C4', 'F4', 'Ab4'], noteNumbers: [1, 6, 9], difficulty: 'level6' },
-  
-  // Level 7: Comprehensive review of all chord types from previous levels
-  // Major triads
-  { name: 'C', notes: ['C4', 'E4', 'G4'], noteNumbers: [1, 5, 8], difficulty: 'level7' },
-  { name: 'F', notes: ['F4', 'A4', 'C5'], noteNumbers: [6, 10, 1], difficulty: 'level7' },
-  { name: 'G', notes: ['G4', 'B4', 'D5'], noteNumbers: [8, 12, 3], difficulty: 'level7' },
-  // Minor triads
-  { name: 'Cm', notes: ['C4', 'Eb4', 'G4'], noteNumbers: [1, 4, 8], difficulty: 'level7' },
-  { name: 'Am', notes: ['A4', 'C5', 'E5'], noteNumbers: [10, 1, 5], difficulty: 'level7' },
-  // Augmented and diminished
-  { name: 'Caug', notes: ['C4', 'E4', 'G#4'], noteNumbers: [1, 5, 9], difficulty: 'level7' },
-  { name: 'Ddim', notes: ['D4', 'F4', 'Ab4'], noteNumbers: [3, 6, 9], difficulty: 'level7' },
-  // Sus chords
-  { name: 'Dsus4', notes: ['D4', 'G4', 'A4'], noteNumbers: [3, 8, 10], difficulty: 'level7' },
-  { name: 'Csus2', notes: ['C4', 'D4', 'G4'], noteNumbers: [1, 3, 8], difficulty: 'level7' },
-  // First Inversions
-  { name: 'C/E', notes: ['E4', 'G4', 'C5'], noteNumbers: [5, 8, 1], difficulty: 'level7' },
-  { name: 'Am/C', notes: ['C4', 'E4', 'A4'], noteNumbers: [1, 5, 10], difficulty: 'level7' },
-  // Second Inversions
-  { name: 'G/D', notes: ['D4', 'G4', 'B4'], noteNumbers: [3, 8, 12], difficulty: 'level7' },
-  { name: 'F/C', notes: ['C4', 'F4', 'A4'], noteNumbers: [1, 6, 10], difficulty: 'level7' }
+// Get root note name (letter) from numeric value
+export function getRootName(rootNum: number): string {
+  const noteNames = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
+  return noteNames[(rootNum - 1) % 12];
+}
+
+// CHORD PATTERNS DEFINITIONS
+
+// Define the chord patterns (types) independently of root notes
+export const chordPatterns: ChordPattern[] = [
+  // Root position chords
+  { type: 'major', display: '', intervals: [0, 4, 7], inversion: 0 },
+  { type: 'minor', display: 'm', intervals: [0, 3, 7], inversion: 0 },
+  { type: 'augmented', display: 'aug', intervals: [0, 4, 8], inversion: 0 },
+  { type: 'diminished', display: 'dim', intervals: [0, 3, 6], inversion: 0 },
+  { type: 'sus2', display: 'sus2', intervals: [0, 2, 7], inversion: 0 },
+  { type: 'sus4', display: 'sus4', intervals: [0, 5, 7], inversion: 0 },
+
+  // First inversions
+  { type: 'major', display: '', intervals: [-8, 0, 3], inversion: 1, inversionDisplay: '1st inv' },
+  { type: 'minor', display: 'm', intervals: [-9, 0, 4], inversion: 1, inversionDisplay: '1st inv' },
+  { type: 'augmented', display: 'aug', intervals: [-8, 0, 4], inversion: 1, inversionDisplay: '1st inv' },
+  { type: 'diminished', display: 'dim', intervals: [-9, 0, 3], inversion: 1, inversionDisplay: '1st inv' },
+
+  // Second inversions
+  { type: 'major', display: '', intervals: [-5, -1, 0], inversion: 2, inversionDisplay: '2nd inv' },
+  { type: 'minor', display: 'm', intervals: [-5, -2, 0], inversion: 2, inversionDisplay: '2nd inv' },
+  { type: 'augmented', display: 'aug', intervals: [-4, 0, 4], inversion: 2, inversionDisplay: '2nd inv' },
+  { type: 'diminished', display: 'dim', intervals: [-6, -3, 0], inversion: 2, inversionDisplay: '2nd inv' }
 ];
 
-// Get chords by difficulty
+// CHORD GENERATION FUNCTIONS
+
+// Generate a chord name based on pattern and root
+function generateChordName(pattern: ChordPattern, rootNum: number): string {
+  const rootName = getRootName(rootNum);
+  
+  // For inversions, show as Root/Bass format
+  if (pattern.inversion > 0) {
+    // Calculate the bass note (lowest note in the inversion)
+    let bassNoteNum = rootNum;
+    
+    // For a first inversion, the bass note is the third of the chord
+    if (pattern.inversion === 1) {
+      if (pattern.type === 'major' || pattern.type === 'augmented') {
+        // Major third
+        bassNoteNum = ((rootNum + 4 - 1) % 12) + 1;
+      } else {
+        // Minor third
+        bassNoteNum = ((rootNum + 3 - 1) % 12) + 1;
+      }
+    } 
+    // For a second inversion, the bass note is the fifth of the chord
+    else if (pattern.inversion === 2) {
+      if (pattern.type === 'augmented') {
+        // Augmented fifth
+        bassNoteNum = ((rootNum + 8 - 1) % 12) + 1;
+      } else if (pattern.type === 'diminished') {
+        // Diminished fifth
+        bassNoteNum = ((rootNum + 6 - 1) % 12) + 1;
+      } else {
+        // Perfect fifth
+        bassNoteNum = ((rootNum + 7 - 1) % 12) + 1;
+      }
+    }
+    
+    const bassName = getRootName(bassNoteNum);
+    return `${rootName}${pattern.display}/${bassName}`;
+  }
+  
+  // Standard chord naming (non-inverted)
+  return `${rootName}${pattern.display}`;
+}
+
+// Calculate note numbers for a chord based on root and pattern
+function calculateChordNotes(rootNum: number, pattern: ChordPattern): number[] {
+  return pattern.intervals.map(interval => {
+    let note = rootNum + interval;
+    
+    // Ensure notes are in range 1-12
+    while (note > 12) note -= 12;
+    while (note < 1) note += 12;
+    
+    return note;
+  });
+}
+
+// Generate actual notes with octaves based on a chord pattern and root
+function generateChordNotes(rootNum: number, pattern: ChordPattern, baseOctave: number = 4): string[] {
+  const noteNumbers = calculateChordNotes(rootNum, pattern);
+  const result: string[] = [];
+  
+  if (pattern.inversion === 0) {
+    // Root position - normal octave assignment
+    let prevNoteNum = 0;
+    let currentOctave = baseOctave;
+    
+    for (const noteNum of noteNumbers) {
+      // If the current note number is less than the previous one, increment the octave
+      if (noteNum <= prevNoteNum) {
+        currentOctave++;
+      }
+      result.push(numericToNote(noteNum, currentOctave));
+      prevNoteNum = noteNum;
+    }
+  } 
+  else if (pattern.inversion === 1) {
+    // First inversion - typical layout: third, fifth, root+octave
+    // These are based on the calculated note numbers, not the actual intervals
+    result.push(numericToNote(noteNumbers[0], baseOctave));
+    result.push(numericToNote(noteNumbers[1], baseOctave));
+    result.push(numericToNote(noteNumbers[2], baseOctave + 1));
+  } 
+  else if (pattern.inversion === 2) {
+    // Second inversion - typical layout: fifth, root+octave, third+octave
+    result.push(numericToNote(noteNumbers[0], baseOctave));
+    result.push(numericToNote(noteNumbers[1], baseOctave + 1));
+    result.push(numericToNote(noteNumbers[2], baseOctave + 1));
+  }
+  
+  return result;
+}
+
+// Create a specific chord definition
+function createChordDef(
+  rootNum: number, 
+  pattern: ChordPattern, 
+  id: number, 
+  difficulty: DifficultyLevel
+): ChordDefinition {
+  const noteNumbers = calculateChordNotes(rootNum, pattern);
+  const notes = generateChordNotes(rootNum, pattern);
+  const name = generateChordName(pattern, rootNum);
+  
+  return {
+    id,
+    rootNum,
+    pattern,
+    name,
+    notes,
+    noteNumbers,
+    difficulty
+  };
+}
+
+// GENERATE CHORD DEFINITIONS FOR EACH DIFFICULTY LEVEL
+
+// Generate chords for all difficulty levels
+let allChordDefs: ChordDefinition[] = [];
+let idCounter = 1;
+
+// Define which roots and patterns to use for each difficulty level
+const rootsLevel1 = [1, 6, 8, 10]; // C, F, G, A (plus D, E for minors)
+const rootsLevel2 = [2, 3, 4, 5, 7, 9, 11, 12]; // C#, D, Eb, E, F#, Ab, Bb, B
+const rootsLevel3 = [1, 3, 5, 6, 8, 10]; // C, D, E, F, G, A (white keys)
+const rootsLevel4 = [2, 4, 7, 9, 11]; // C#, Eb, F#, Ab, Bb (black keys)
+const rootsLevel5 = [1, 3, 5, 6, 8, 10]; // C, D, E, F, G, A
+const rootsLevel6 = [1, 3, 5, 6, 8, 10]; // C, D, E, F, G, A
+const rootsLevel7 = [1, 3, 6, 8, 10]; // C, D, F, G, A
+
+// Create a map to hold chord definitions by difficulty
+const chordsByDifficulty: Record<DifficultyLevel, ChordDefinition[]> = {
+  'level1': [],
+  'level2': [],
+  'level3': [],
+  'level4': [],
+  'level5': [],
+  'level6': [],
+  'level7': []
+};
+
+// Level 1: Major/Minor Triads (root position only)
+rootsLevel1.forEach(rootNum => {
+  // Add major chords for all roots
+  const majorPattern = chordPatterns.find(p => p.type === 'major' && p.inversion === 0);
+  if (majorPattern) {
+    chordsByDifficulty['level1'].push(createChordDef(rootNum, majorPattern, idCounter++, 'level1'));
+  }
+  
+  // Add minor chords for all roots
+  const minorPattern = chordPatterns.find(p => p.type === 'minor' && p.inversion === 0);
+  if (minorPattern) {
+    chordsByDifficulty['level1'].push(createChordDef(rootNum, minorPattern, idCounter++, 'level1'));
+  }
+});
+
+// Add D minor, E minor
+const minorPattern = chordPatterns.find(p => p.type === 'minor' && p.inversion === 0);
+if (minorPattern) {
+  chordsByDifficulty['level1'].push(createChordDef(3, minorPattern, idCounter++, 'level1')); // D minor
+  chordsByDifficulty['level1'].push(createChordDef(5, minorPattern, idCounter++, 'level1')); // E minor
+}
+
+// Level 2: Major/Minor chords with all white and black keys
+rootsLevel2.forEach(rootNum => {
+  // For level 2, we'll focus on major triads for black key roots
+  // and minor triads for white key roots that weren't in level 1
+  
+  const majorPattern = chordPatterns.find(p => p.type === 'major' && p.inversion === 0);
+  if (majorPattern) {
+    if ([2, 3, 4, 5, 7, 9, 11].includes(rootNum)) { // C#, D, Eb, E, F#, Ab, Bb
+      chordsByDifficulty['level2'].push(createChordDef(rootNum, majorPattern, idCounter++, 'level2'));
+    }
+  }
+  
+  const minorPattern = chordPatterns.find(p => p.type === 'minor' && p.inversion === 0);
+  if (minorPattern) {
+    if (rootNum === 12) { // Only B minor for level 2
+      chordsByDifficulty['level2'].push(createChordDef(rootNum, minorPattern, idCounter++, 'level2'));
+    }
+  }
+});
+
+// Level 3: Aug/Dim/Sus chords with white keys
+rootsLevel3.forEach(rootNum => {
+  const augPattern = chordPatterns.find(p => p.type === 'augmented' && p.inversion === 0);
+  const dimPattern = chordPatterns.find(p => p.type === 'diminished' && p.inversion === 0);
+  const sus2Pattern = chordPatterns.find(p => p.type === 'sus2' && p.inversion === 0);
+  const sus4Pattern = chordPatterns.find(p => p.type === 'sus4' && p.inversion === 0);
+  
+  if (augPattern) {
+    chordsByDifficulty['level3'].push(createChordDef(rootNum, augPattern, idCounter++, 'level3'));
+  }
+  
+  if (dimPattern) {
+    chordsByDifficulty['level3'].push(createChordDef(rootNum, dimPattern, idCounter++, 'level3'));
+  }
+  
+  // Only add sus chords for C, F, and G
+  if (rootNum === 1 && sus2Pattern) {
+    chordsByDifficulty['level3'].push(createChordDef(rootNum, sus2Pattern, idCounter++, 'level3'));
+  }
+  
+  if (rootNum === 3 && sus4Pattern) {
+    chordsByDifficulty['level3'].push(createChordDef(rootNum, sus4Pattern, idCounter++, 'level3'));
+  }
+});
+
+// Level 4: All 12 keys, using proper naming
+rootsLevel4.forEach(rootNum => {
+  const augPattern = chordPatterns.find(p => p.type === 'augmented' && p.inversion === 0);
+  const dimPattern = chordPatterns.find(p => p.type === 'diminished' && p.inversion === 0);
+  const sus2Pattern = chordPatterns.find(p => p.type === 'sus2' && p.inversion === 0);
+  const sus4Pattern = chordPatterns.find(p => p.type === 'sus4' && p.inversion === 0);
+  
+  if (augPattern) {
+    chordsByDifficulty['level4'].push(createChordDef(rootNum, augPattern, idCounter++, 'level4'));
+  }
+  
+  if (dimPattern) {
+    chordsByDifficulty['level4'].push(createChordDef(rootNum, dimPattern, idCounter++, 'level4'));
+  }
+  
+  // Only add sus chords for select black keys
+  if (rootNum === 2 && sus2Pattern) { // C# sus2
+    chordsByDifficulty['level4'].push(createChordDef(rootNum, sus2Pattern, idCounter++, 'level4'));
+  }
+  
+  if (rootNum === 4 && sus4Pattern) { // Eb sus4
+    chordsByDifficulty['level4'].push(createChordDef(rootNum, sus4Pattern, idCounter++, 'level4'));
+  }
+});
+
+// Level 5: First inversions
+rootsLevel5.forEach(rootNum => {
+  const majorInv1Pattern = chordPatterns.find(p => p.type === 'major' && p.inversion === 1);
+  const minorInv1Pattern = chordPatterns.find(p => p.type === 'minor' && p.inversion === 1);
+  
+  if (majorInv1Pattern) {
+    chordsByDifficulty['level5'].push(createChordDef(rootNum, majorInv1Pattern, idCounter++, 'level5'));
+  }
+  
+  if (minorInv1Pattern) {
+    chordsByDifficulty['level5'].push(createChordDef(rootNum, minorInv1Pattern, idCounter++, 'level5'));
+  }
+});
+
+// Level 6: Second inversions
+rootsLevel6.forEach(rootNum => {
+  const majorInv2Pattern = chordPatterns.find(p => p.type === 'major' && p.inversion === 2);
+  const minorInv2Pattern = chordPatterns.find(p => p.type === 'minor' && p.inversion === 2);
+  
+  if (majorInv2Pattern) {
+    chordsByDifficulty['level6'].push(createChordDef(rootNum, majorInv2Pattern, idCounter++, 'level6'));
+  }
+  
+  if (minorInv2Pattern) {
+    chordsByDifficulty['level6'].push(createChordDef(rootNum, minorInv2Pattern, idCounter++, 'level6'));
+  }
+});
+
+// Level 7: Comprehensive review of all chord types from previous levels
+// We'll select a representative subset of all previous chords
+const patterns = {
+  major: chordPatterns.find(p => p.type === 'major' && p.inversion === 0),
+  minor: chordPatterns.find(p => p.type === 'minor' && p.inversion === 0),
+  aug: chordPatterns.find(p => p.type === 'augmented' && p.inversion === 0),
+  dim: chordPatterns.find(p => p.type === 'diminished' && p.inversion === 0),
+  sus2: chordPatterns.find(p => p.type === 'sus2' && p.inversion === 0),
+  sus4: chordPatterns.find(p => p.type === 'sus4' && p.inversion === 0),
+  majorInv1: chordPatterns.find(p => p.type === 'major' && p.inversion === 1),
+  minorInv1: chordPatterns.find(p => p.type === 'minor' && p.inversion === 1),
+  majorInv2: chordPatterns.find(p => p.type === 'major' && p.inversion === 2),
+  minorInv2: chordPatterns.find(p => p.type === 'minor' && p.inversion === 2)
+};
+
+// Add a variety of chords to level 7
+if (patterns.major) {
+  chordsByDifficulty['level7'].push(createChordDef(1, patterns.major, idCounter++, 'level7')); // C
+  chordsByDifficulty['level7'].push(createChordDef(6, patterns.major, idCounter++, 'level7')); // F
+}
+
+if (patterns.minor) {
+  chordsByDifficulty['level7'].push(createChordDef(10, patterns.minor, idCounter++, 'level7')); // Am
+  chordsByDifficulty['level7'].push(createChordDef(3, patterns.minor, idCounter++, 'level7')); // Dm
+}
+
+if (patterns.aug) {
+  chordsByDifficulty['level7'].push(createChordDef(1, patterns.aug, idCounter++, 'level7')); // Caug
+}
+
+if (patterns.dim) {
+  chordsByDifficulty['level7'].push(createChordDef(3, patterns.dim, idCounter++, 'level7')); // Ddim
+}
+
+if (patterns.sus2) {
+  chordsByDifficulty['level7'].push(createChordDef(1, patterns.sus2, idCounter++, 'level7')); // Csus2
+}
+
+if (patterns.sus4) {
+  chordsByDifficulty['level7'].push(createChordDef(3, patterns.sus4, idCounter++, 'level7')); // Dsus4
+}
+
+if (patterns.majorInv1) {
+  chordsByDifficulty['level7'].push(createChordDef(1, patterns.majorInv1, idCounter++, 'level7')); // C/E
+}
+
+if (patterns.minorInv1) {
+  chordsByDifficulty['level7'].push(createChordDef(10, patterns.minorInv1, idCounter++, 'level7')); // Am/C
+}
+
+if (patterns.majorInv2) {
+  chordsByDifficulty['level7'].push(createChordDef(8, patterns.majorInv2, idCounter++, 'level7')); // G/D
+}
+
+if (patterns.minorInv2) {
+  chordsByDifficulty['level7'].push(createChordDef(3, patterns.minorInv2, idCounter++, 'level7')); // Dm/A
+}
+
+// Combine all chord definitions
+for (const level of difficultyLevels) {
+  allChordDefs = [...allChordDefs, ...chordsByDifficulty[level]];
+}
+
+// Export all chord definitions
+export const chordDefinitions = chordsByDifficulty;
+
+// PUBLIC API FUNCTIONS
+
+// Get chord definitions by difficulty level
 export function getChordsByDifficulty(difficulty: DifficultyLevel): ChordDefinition[] {
-  return chordDefinitions.filter(chord => chord.difficulty === difficulty);
+  return chordDefinitions[difficulty] || [];
 }
 
 // Get a random chord from a specific difficulty
