@@ -128,14 +128,14 @@ export const chordPatterns: ChordPattern[] = [
     display: "aug",
     intervals: [-8, 0, 4],
     inversion: 1,
-    inversionDisplay: "1st inv",
+    inversionDisplay: "1st inversion",
   },
   {
     type: "diminished",
     display: "dim",
     intervals: [-9, 0, 3],
     inversion: 1,
-    inversionDisplay: "1st inv",
+    inversionDisplay: "1st inversion",
   },
 
   // Second inversions
@@ -180,21 +180,21 @@ function generateChordName(pattern: ChordPattern, rootNum: number): string {
     return `${rootName}${pattern.display}`;
   }
   
-  // For inversions, prioritize showing the inversion display without the root name
+  // For inversions, show root name with inversion as a suffix
   if (pattern.inversion > 0) {
     if (pattern.inversionDisplay) {
-      return pattern.inversionDisplay;
+      return `${rootName}${pattern.display} ${pattern.inversionDisplay}`;
     }
     
     // Fallback for inversions without inversionDisplay property
     if (pattern.inversion === 1) {
-      return `1st inv`;
+      return `${rootName}${pattern.display} 1st inv`;
     } 
     else if (pattern.inversion === 2) {
-      return `2nd inv`;
+      return `${rootName}${pattern.display} 2nd inv`;
     }
     else {
-      return `${pattern.inversion}th inv`;
+      return `${rootName}${pattern.display} ${pattern.inversion}th inv`;
     }
   }
 
