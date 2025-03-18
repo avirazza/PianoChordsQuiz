@@ -57,9 +57,9 @@ export function getInversionDisplay(inversion: number): string {
   // Convert inversion number to text for display
   switch(inversion) {
     case 0: return ''; // Root position
-    case 1: return '1st inv';
-    case 2: return '2nd inv';
-    case 3: return '3rd inv';
+    case 1: return '1st inv'; // 3rd in bass
+    case 2: return '2nd inv'; // 5th in bass
+    case 3: return '3rd inv'; // 7th in bass (for 7th chords)
     case 4: return '4th inv';
     default: return `${inversion}th inv`;
   }
@@ -515,16 +515,20 @@ export function generateChordName(
 ): string {
   const rootName = getRootName(rootNum);
 
+  // For root position chords, just show the root + chord type
   if (pattern.inversion === 0) {
     return `${rootName}${pattern.display}`;
   } else {
     // For inversions, find the bass note
     const bassInterval = pattern.intervals[0];
     const bassNoteNum = (rootNum + bassInterval) % 12 || 12;
+    const bassNoteName = getRootName(bassNoteNum);
     
     // Use the getInversionDisplay function to get the inversion text
     const inversionText = getInversionDisplay(pattern.inversion);
-    
+
+    // The chord name should always show the root note as the main chord name
+    // The bass note is only relevant for slash chords, which we're not using here
     return `${rootName}${pattern.display}    ${inversionText}`;
   }
 }
