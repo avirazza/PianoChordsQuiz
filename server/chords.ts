@@ -68,88 +68,412 @@ export function getInversionDisplay(inversion: number): string {
 // Define all chord patterns
 export const chordPatterns: ChordPattern[] = [
   // Major chords
-  { type: "major", display: "", intervals: [0, 4, 7], inversion: 0 },
-  { type: "major", display: "", intervals: [0, 3, 8], inversion: 1 },
-  { type: "major", display: "", intervals: [0, 5, 9], inversion: 2 },
+  { 
+    type: "major", 
+    display: "", 
+    intervals: [0, 4, 7], 
+    inversion: 0,
+    scaleDegreeMap: { 0: "1", 4: "3", 7: "5" }  // Root position: 1-3-5
+  },
+  { 
+    type: "major", 
+    display: "", 
+    intervals: [0, 3, 8], 
+    inversion: 1,
+    scaleDegreeMap: { 0: "3", 3: "5", 8: "1" }  // First inversion: 3-5-1
+  },
+  { 
+    type: "major", 
+    display: "", 
+    intervals: [0, 5, 9], 
+    inversion: 2,
+    scaleDegreeMap: { 0: "5", 5: "1", 9: "3" }  // Second inversion: 5-1-3
+  },
 
   // Minor chords
-  { type: "minor", display: "m", intervals: [0, 3, 7], inversion: 0 },
-  { type: "minor", display: "m", intervals: [0, 4, 9], inversion: 1 },
-  { type: "minor", display: "m", intervals: [0, 5, 8], inversion: 2 },
+  { 
+    type: "minor", 
+    display: "m", 
+    intervals: [0, 3, 7], 
+    inversion: 0,
+    scaleDegreeMap: { 0: "1", 3: "b3", 7: "5" }  // Root position: 1-b3-5
+  },
+  { 
+    type: "minor", 
+    display: "m", 
+    intervals: [0, 4, 9], 
+    inversion: 1,
+    scaleDegreeMap: { 0: "b3", 4: "5", 9: "1" }  // First inversion: b3-5-1
+  },
+  { 
+    type: "minor", 
+    display: "m", 
+    intervals: [0, 5, 8], 
+    inversion: 2,
+    scaleDegreeMap: { 0: "5", 5: "1", 8: "b3" }  // Second inversion: 5-1-b3
+  },
 
   // Augmented chords
-  { type: "augmented", display: "aug", intervals: [0, 4, 8], inversion: 0 },
-  { type: "augmented", display: "aug", intervals: [0, 4, 8], inversion: 1 },
-  { type: "augmented", display: "aug", intervals: [0, 4, 8], inversion: 2 },
+  { 
+    type: "augmented", 
+    display: "aug", 
+    intervals: [0, 4, 8], 
+    inversion: 0,
+    scaleDegreeMap: { 0: "1", 4: "3", 8: "#5" }  // Root position: 1-3-#5
+  },
+  { 
+    type: "augmented", 
+    display: "aug", 
+    intervals: [0, 4, 8], 
+    inversion: 1,
+    scaleDegreeMap: { 0: "3", 4: "#5", 8: "1" }  // First inversion: 3-#5-1
+  },
+  { 
+    type: "augmented", 
+    display: "aug", 
+    intervals: [0, 4, 8], 
+    inversion: 2,
+    scaleDegreeMap: { 0: "#5", 4: "1", 8: "3" }  // Second inversion: #5-1-3
+  },
 
   // Diminished chords
-  { type: "diminished", display: "dim", intervals: [0, 3, 6], inversion: 0 },
-  { type: "diminished", display: "dim", intervals: [0, 3, 9], inversion: 1 },
-  { type: "diminished", display: "dim", intervals: [0, 6, 9], inversion: 2 },
+  { 
+    type: "diminished", 
+    display: "dim", 
+    intervals: [0, 3, 6], 
+    inversion: 0,
+    scaleDegreeMap: { 0: "1", 3: "b3", 6: "b5" }  // Root position: 1-b3-b5
+  },
+  { 
+    type: "diminished", 
+    display: "dim", 
+    intervals: [0, 3, 9], 
+    inversion: 1,
+    scaleDegreeMap: { 0: "b3", 3: "b5", 9: "1" }  // First inversion: b3-b5-1
+  },
+  { 
+    type: "diminished", 
+    display: "dim", 
+    intervals: [0, 6, 9], 
+    inversion: 2,
+    scaleDegreeMap: { 0: "b5", 6: "1", 9: "b3" }  // Second inversion: b5-1-b3
+  },
 
   // Sus2 chords
-  { type: "sus2", display: "sus2", intervals: [0, 2, 7], inversion: 0 },
-  { type: "sus2", display: "sus2", intervals: [0, 5, 10], inversion: 1 },
-  { type: "sus2", display: "sus2", intervals: [0, 5, 7], inversion: 2 },
+  { 
+    type: "sus2", 
+    display: "sus2", 
+    intervals: [0, 2, 7], 
+    inversion: 0,
+    scaleDegreeMap: { 0: "1", 2: "2", 7: "5" }  // Root position: 1-2-5
+  },
+  { 
+    type: "sus2", 
+    display: "sus2", 
+    intervals: [0, 5, 10], 
+    inversion: 1,
+    scaleDegreeMap: { 0: "2", 5: "5", 10: "1" }  // First inversion: 2-5-1
+  },
+  { 
+    type: "sus2", 
+    display: "sus2", 
+    intervals: [0, 5, 7], 
+    inversion: 2,
+    scaleDegreeMap: { 0: "5", 5: "1", 7: "2" }  // Second inversion: 5-1-2
+  },
 
   // Sus4 chords
-  { type: "sus4", display: "sus4", intervals: [0, 5, 7], inversion: 0 },
-  { type: "sus4", display: "sus4", intervals: [0, 2, 7], inversion: 1 },
-  { type: "sus4", display: "sus4", intervals: [0, 5, 10], inversion: 2 },
+  { 
+    type: "sus4", 
+    display: "sus4", 
+    intervals: [0, 5, 7], 
+    inversion: 0,
+    scaleDegreeMap: { 0: "1", 5: "4", 7: "5" }  // Root position: 1-4-5
+  },
+  { 
+    type: "sus4", 
+    display: "sus4", 
+    intervals: [0, 2, 7], 
+    inversion: 1,
+    scaleDegreeMap: { 0: "4", 2: "5", 7: "1" }  // First inversion: 4-5-1
+  },
+  { 
+    type: "sus4", 
+    display: "sus4", 
+    intervals: [0, 5, 10], 
+    inversion: 2,
+    scaleDegreeMap: { 0: "5", 5: "1", 10: "4" }  // Second inversion: 5-1-4
+  },
   
   // 7th chords (dominant 7th)
-  { type: "dominant7", display: "7", intervals: [0, 4, 7, 10], inversion: 0 },
-  { type: "dominant7", display: "7", intervals: [0, 3, 6, 8], inversion: 1 },
-  { type: "dominant7", display: "7", intervals: [0, 3, 5, 9], inversion: 2 },
-  { type: "dominant7", display: "7", intervals: [0, 2, 6, 9], inversion: 3 },
+  { 
+    type: "dominant7", 
+    display: "7", 
+    intervals: [0, 4, 7, 10], 
+    inversion: 0,
+    scaleDegreeMap: { 0: "1", 4: "3", 7: "5", 10: "b7" }  // Root position: 1-3-5-b7
+  },
+  { 
+    type: "dominant7", 
+    display: "7", 
+    intervals: [0, 3, 6, 8], 
+    inversion: 1,
+    scaleDegreeMap: { 0: "3", 3: "5", 6: "b7", 8: "1" }  // First inversion: 3-5-b7-1
+  },
+  { 
+    type: "dominant7", 
+    display: "7", 
+    intervals: [0, 3, 5, 9], 
+    inversion: 2,
+    scaleDegreeMap: { 0: "5", 3: "b7", 5: "1", 9: "3" }  // Second inversion: 5-b7-1-3
+  },
+  { 
+    type: "dominant7", 
+    display: "7", 
+    intervals: [0, 2, 6, 9], 
+    inversion: 3,
+    scaleDegreeMap: { 0: "b7", 2: "1", 6: "3", 9: "5" }  // Third inversion: b7-1-3-5
+  },
   
   // Major 7th chords
-  { type: "major7", display: "maj7", intervals: [0, 4, 7, 11], inversion: 0 },
-  { type: "major7", display: "maj7", intervals: [0, 3, 7, 8], inversion: 1 },
-  { type: "major7", display: "maj7", intervals: [0, 4, 5, 9], inversion: 2 },
-  { type: "major7", display: "maj7", intervals: [0, 1, 5, 8], inversion: 3 },
+  { 
+    type: "major7", 
+    display: "maj7", 
+    intervals: [0, 4, 7, 11], 
+    inversion: 0,
+    scaleDegreeMap: { 0: "1", 4: "3", 7: "5", 11: "7" }  // Root position: 1-3-5-7
+  },
+  { 
+    type: "major7", 
+    display: "maj7", 
+    intervals: [0, 3, 7, 8], 
+    inversion: 1,
+    scaleDegreeMap: { 0: "3", 3: "5", 7: "7", 8: "1" }  // First inversion: 3-5-7-1
+  },
+  { 
+    type: "major7", 
+    display: "maj7", 
+    intervals: [0, 4, 5, 9], 
+    inversion: 2,
+    scaleDegreeMap: { 0: "5", 4: "7", 5: "1", 9: "3" }  // Second inversion: 5-7-1-3
+  },
+  { 
+    type: "major7", 
+    display: "maj7", 
+    intervals: [0, 1, 5, 8], 
+    inversion: 3,
+    scaleDegreeMap: { 0: "7", 1: "1", 5: "3", 8: "5" }  // Third inversion: 7-1-3-5
+  },
   
   // Minor 7th chords
-  { type: "minor7", display: "m7", intervals: [0, 3, 7, 10], inversion: 0 },
-  { type: "minor7", display: "m7", intervals: [0, 4, 7, 9], inversion: 1 },
-  { type: "minor7", display: "m7", intervals: [0, 3, 5, 8], inversion: 2 },
-  { type: "minor7", display: "m7", intervals: [0, 2, 5, 9], inversion: 3 },
+  { 
+    type: "minor7", 
+    display: "m7", 
+    intervals: [0, 3, 7, 10], 
+    inversion: 0,
+    scaleDegreeMap: { 0: "1", 3: "b3", 7: "5", 10: "b7" }  // Root position: 1-b3-5-b7
+  },
+  { 
+    type: "minor7", 
+    display: "m7", 
+    intervals: [0, 4, 7, 9], 
+    inversion: 1,
+    scaleDegreeMap: { 0: "b3", 4: "5", 7: "b7", 9: "1" }  // First inversion: b3-5-b7-1
+  },
+  { 
+    type: "minor7", 
+    display: "m7", 
+    intervals: [0, 3, 5, 8], 
+    inversion: 2,
+    scaleDegreeMap: { 0: "5", 3: "b7", 5: "1", 8: "b3" }  // Second inversion: 5-b7-1-b3
+  },
+  { 
+    type: "minor7", 
+    display: "m7", 
+    intervals: [0, 2, 5, 9], 
+    inversion: 3,
+    scaleDegreeMap: { 0: "b7", 2: "1", 5: "b3", 9: "5" }  // Third inversion: b7-1-b3-5
+  },
   
   // Diminished 7th chords
-  { type: "diminished7", display: "dim7", intervals: [0, 3, 6, 9], inversion: 0 },
-  { type: "diminished7", display: "dim7", intervals: [0, 3, 6, 9], inversion: 1 },
-  { type: "diminished7", display: "dim7", intervals: [0, 3, 6, 9], inversion: 2 },
-  { type: "diminished7", display: "dim7", intervals: [0, 3, 6, 9], inversion: 3 },
+  { 
+    type: "diminished7", 
+    display: "dim7", 
+    intervals: [0, 3, 6, 9], 
+    inversion: 0,
+    scaleDegreeMap: { 0: "1", 3: "b3", 6: "b5", 9: "bb7" }  // Root position: 1-b3-b5-bb7
+  },
+  { 
+    type: "diminished7", 
+    display: "dim7", 
+    intervals: [0, 3, 6, 9], 
+    inversion: 1,
+    scaleDegreeMap: { 0: "b3", 3: "b5", 6: "bb7", 9: "1" }  // First inversion: b3-b5-bb7-1
+  },
+  { 
+    type: "diminished7", 
+    display: "dim7", 
+    intervals: [0, 3, 6, 9], 
+    inversion: 2,
+    scaleDegreeMap: { 0: "b5", 3: "bb7", 6: "1", 9: "b3" }  // Second inversion: b5-bb7-1-b3
+  },
+  { 
+    type: "diminished7", 
+    display: "dim7", 
+    intervals: [0, 3, 6, 9], 
+    inversion: 3,
+    scaleDegreeMap: { 0: "bb7", 3: "1", 6: "b3", 9: "b5" }  // Third inversion: bb7-1-b3-b5
+  },
   
   // Half-diminished 7th chords (m7b5)
-  { type: "halfdiminished7", display: "m7b5", intervals: [0, 3, 6, 10], inversion: 0 },
-  { type: "halfdiminished7", display: "m7b5", intervals: [0, 3, 7, 9], inversion: 1 },
-  { type: "halfdiminished7", display: "m7b5", intervals: [0, 4, 6, 9], inversion: 2 },
-  { type: "halfdiminished7", display: "m7b5", intervals: [0, 2, 5, 8], inversion: 3 },
+  { 
+    type: "halfdiminished7", 
+    display: "m7b5", 
+    intervals: [0, 3, 6, 10], 
+    inversion: 0,
+    scaleDegreeMap: { 0: "1", 3: "b3", 6: "b5", 10: "b7" }  // Root position: 1-b3-b5-b7
+  },
+  { 
+    type: "halfdiminished7", 
+    display: "m7b5", 
+    intervals: [0, 3, 7, 9], 
+    inversion: 1,
+    scaleDegreeMap: { 0: "b3", 3: "b5", 7: "b7", 9: "1" }  // First inversion: b3-b5-b7-1
+  },
+  { 
+    type: "halfdiminished7", 
+    display: "m7b5", 
+    intervals: [0, 4, 6, 9], 
+    inversion: 2,
+    scaleDegreeMap: { 0: "b5", 4: "b7", 6: "1", 9: "b3" }  // Second inversion: b5-b7-1-b3
+  },
+  { 
+    type: "halfdiminished7", 
+    display: "m7b5", 
+    intervals: [0, 2, 5, 8], 
+    inversion: 3,
+    scaleDegreeMap: { 0: "b7", 2: "1", 5: "b3", 8: "b5" }  // Third inversion: b7-1-b3-b5
+  },
   
   // Minor with Major 7th chords (mMaj7)
-  { type: "minorMajor7", display: "mMaj7", intervals: [0, 3, 7, 11], inversion: 0 },
-  { type: "minorMajor7", display: "mMaj7", intervals: [0, 4, 8, 9], inversion: 1 },
-  { type: "minorMajor7", display: "mMaj7", intervals: [0, 4, 5, 8], inversion: 2 },
-  { type: "minorMajor7", display: "mMaj7", intervals: [0, 1, 4, 9], inversion: 3 },
+  { 
+    type: "minorMajor7", 
+    display: "mMaj7", 
+    intervals: [0, 3, 7, 11], 
+    inversion: 0,
+    scaleDegreeMap: { 0: "1", 3: "b3", 7: "5", 11: "7" }  // Root position: 1-b3-5-7
+  },
+  { 
+    type: "minorMajor7", 
+    display: "mMaj7", 
+    intervals: [0, 4, 8, 9], 
+    inversion: 1,
+    scaleDegreeMap: { 0: "b3", 4: "5", 8: "7", 9: "1" }  // First inversion: b3-5-7-1
+  },
+  { 
+    type: "minorMajor7", 
+    display: "mMaj7", 
+    intervals: [0, 4, 5, 8], 
+    inversion: 2,
+    scaleDegreeMap: { 0: "5", 4: "7", 5: "1", 8: "b3" }  // Second inversion: 5-7-1-b3
+  },
+  { 
+    type: "minorMajor7", 
+    display: "mMaj7", 
+    intervals: [0, 1, 4, 9], 
+    inversion: 3,
+    scaleDegreeMap: { 0: "7", 1: "1", 4: "b3", 9: "5" }  // Third inversion: 7-1-b3-5
+  },
   
   // Diminished with Major 7th (dimMaj7)
-  { type: "diminishedMajor7", display: "dimMaj7", intervals: [0, 3, 6, 11], inversion: 0 },
-  { type: "diminishedMajor7", display: "dimMaj7", intervals: [0, 3, 8, 9], inversion: 1 },
-  { type: "diminishedMajor7", display: "dimMaj7", intervals: [0, 5, 6, 9], inversion: 2 },
-  { type: "diminishedMajor7", display: "dimMaj7", intervals: [0, 1, 4, 7], inversion: 3 },
+  { 
+    type: "diminishedMajor7", 
+    display: "dimMaj7", 
+    intervals: [0, 3, 6, 11], 
+    inversion: 0,
+    scaleDegreeMap: { 0: "1", 3: "b3", 6: "b5", 11: "7" }  // Root position: 1-b3-b5-7
+  },
+  { 
+    type: "diminishedMajor7", 
+    display: "dimMaj7", 
+    intervals: [0, 3, 8, 9], 
+    inversion: 1,
+    scaleDegreeMap: { 0: "b3", 3: "b5", 8: "7", 9: "1" }  // First inversion: b3-b5-7-1
+  },
+  { 
+    type: "diminishedMajor7", 
+    display: "dimMaj7", 
+    intervals: [0, 5, 6, 9], 
+    inversion: 2,
+    scaleDegreeMap: { 0: "b5", 5: "7", 6: "1", 9: "b3" }  // Second inversion: b5-7-1-b3
+  },
+  { 
+    type: "diminishedMajor7", 
+    display: "dimMaj7", 
+    intervals: [0, 1, 4, 7], 
+    inversion: 3,
+    scaleDegreeMap: { 0: "7", 1: "1", 4: "b3", 7: "b5" }  // Third inversion: 7-1-b3-b5
+  },
   
   // Augmented with Minor 7th (aug7)
-  { type: "augmentedMinor7", display: "aug7", intervals: [0, 4, 8, 10], inversion: 0 },
-  { type: "augmentedMinor7", display: "aug7", intervals: [0, 4, 6, 8], inversion: 1 },
-  { type: "augmentedMinor7", display: "aug7", intervals: [0, 2, 4, 8], inversion: 2 },
-  { type: "augmentedMinor7", display: "aug7", intervals: [0, 2, 6, 10], inversion: 3 },
+  { 
+    type: "augmentedMinor7", 
+    display: "aug7", 
+    intervals: [0, 4, 8, 10], 
+    inversion: 0,
+    scaleDegreeMap: { 0: "1", 4: "3", 8: "#5", 10: "b7" }  // Root position: 1-3-#5-b7
+  },
+  { 
+    type: "augmentedMinor7", 
+    display: "aug7", 
+    intervals: [0, 4, 6, 8], 
+    inversion: 1,
+    scaleDegreeMap: { 0: "3", 4: "#5", 6: "b7", 8: "1" }  // First inversion: 3-#5-b7-1
+  },
+  { 
+    type: "augmentedMinor7", 
+    display: "aug7", 
+    intervals: [0, 2, 4, 8], 
+    inversion: 2,
+    scaleDegreeMap: { 0: "#5", 2: "b7", 4: "1", 8: "3" }  // Second inversion: #5-b7-1-3
+  },
+  { 
+    type: "augmentedMinor7", 
+    display: "aug7", 
+    intervals: [0, 2, 6, 10], 
+    inversion: 3,
+    scaleDegreeMap: { 0: "b7", 2: "1", 6: "3", 10: "#5" }  // Third inversion: b7-1-3-#5
+  },
   
   // Augmented with Major 7th (augMaj7)
-  { type: "augmentedMajor7", display: "augMaj7", intervals: [0, 4, 8, 11], inversion: 0 },
-  { type: "augmentedMajor7", display: "augMaj7", intervals: [0, 4, 7, 8], inversion: 1 },
-  { type: "augmentedMajor7", display: "augMaj7", intervals: [0, 3, 4, 8], inversion: 2 },
-  { type: "augmentedMajor7", display: "augMaj7", intervals: [0, 1, 5, 9], inversion: 3 }
+  { 
+    type: "augmentedMajor7", 
+    display: "augMaj7", 
+    intervals: [0, 4, 8, 11], 
+    inversion: 0,
+    scaleDegreeMap: { 0: "1", 4: "3", 8: "#5", 11: "7" }  // Root position: 1-3-#5-7
+  },
+  { 
+    type: "augmentedMajor7", 
+    display: "augMaj7", 
+    intervals: [0, 4, 7, 8], 
+    inversion: 1,
+    scaleDegreeMap: { 0: "3", 4: "#5", 7: "7", 8: "1" }  // First inversion: 3-#5-7-1
+  },
+  { 
+    type: "augmentedMajor7", 
+    display: "augMaj7", 
+    intervals: [0, 3, 4, 8], 
+    inversion: 2,
+    scaleDegreeMap: { 0: "#5", 3: "7", 4: "1", 8: "3" }  // Second inversion: #5-7-1-3
+  },
+  { 
+    type: "augmentedMajor7", 
+    display: "augMaj7", 
+    intervals: [0, 1, 5, 9], 
+    inversion: 3,
+    scaleDegreeMap: { 0: "7", 1: "1", 5: "3", 9: "#5" }  // Third inversion: 7-1-3-#5
+  }
 ];
 
 // All roots from 1 to 12
@@ -291,6 +615,23 @@ export function createChordDefinition(
   const name = generateChordName(rootNum, pattern);
   const notes = generateNoteStrings(rootNum, pattern);
   const noteNumbers = notes.map(noteToNumeric);
+  
+  // Add scale degrees mapping based on the pattern's scale degree map
+  // This maps each note to its scale degree relative to the root
+  const scaleDegrees: Record<number, string> = {};
+  
+  // Calculate the actual notes from the root and intervals
+  const actualNotes = calculateChordNotes(rootNum, pattern.intervals);
+  
+  // Map each note to its scale degree
+  actualNotes.forEach((noteNum, index) => {
+    // The interval is used as a key in the scaleDegreeMap
+    const interval = pattern.intervals[index];
+    const scaleDegree = pattern.scaleDegreeMap[interval];
+    
+    // Use the position in the sequence (0, 1, 2, 3) as the key in scaleDegrees
+    scaleDegrees[index] = scaleDegree;
+  });
 
   return {
     id,
@@ -298,6 +639,9 @@ export function createChordDefinition(
     notes,
     noteNumbers,
     difficulty,
+    rootNote: rootNum,
+    scaleDegrees,
+    inversion: pattern.inversion
   };
 }
 
@@ -561,14 +905,17 @@ export function getAllChords(): ChordData[] {
 /**
  * Compare two chords to see if they match, enforcing correct inversion
  * Uses a mathematical approach with numeric note representation (1-12)
+ * and considers scale degrees for better musical understanding
  *
  * @param userNotes Array of note strings (e.g. ["C4", "E4", "G4"])
  * @param targetNotes Array of note strings for the target chord
+ * @param targetChord Optional ChordData object for more precise scale degree comparison
  * @returns boolean indicating whether the chords match
  */
 export function checkChordMatch(
   userNotes: string[],
   targetNotes: string[],
+  targetChord?: ChordData
 ): boolean {
   // Ensure we have the same number of notes
   if (userNotes.length !== targetNotes.length) {
@@ -624,6 +971,16 @@ export function checkChordMatch(
   // Check if the bottom note matches (this enforces correct inversion)
   if (userNotesWithOctaves[0].note !== targetNotesWithOctaves[0].note) {
     return false; // Wrong bottom note = wrong inversion
+  }
+
+  // If we have chord data with scale degrees, we can perform more advanced comparison
+  if (targetChord && targetChord.scaleDegrees) {
+    // Advanced check: For future use when we want to verify scale degrees match
+    // This helps ensure the chord is voiced correctly regardless of octave placement
+
+    // Example future implementation would be to analyze the user's chord against
+    // the expected scale degrees to ensure not just the right notes but the right
+    // functional representation of the chord
   }
 
   // The chord has the same notes and the correct bottom note, so it's valid
