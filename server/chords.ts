@@ -524,12 +524,9 @@ export function generateChordName(
     const bassNoteNum = (rootNum + bassInterval) % 12 || 12;
     const bassNoteName = getRootName(bassNoteNum);
     
-    // Use the getInversionDisplay function to get the inversion text
-    const inversionText = getInversionDisplay(pattern.inversion);
-
-    // The chord name should always show the root note as the main chord name
-    // The bass note is only relevant for slash chords, which we're not using here
-    return `${rootName}${pattern.display}    ${inversionText}`;
+    // Use the slash notation to show the inversion (e.g., "C/E" for first inversion C major)
+    // This explicitly shows that the root is different from the bass note
+    return `${rootName}${pattern.display}/${bassNoteName}`;
   }
 }
 
