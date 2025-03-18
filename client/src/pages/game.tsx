@@ -18,6 +18,8 @@ export default function Game() {
   const [showFeedback, setShowFeedback] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState("");
+  const [recentChordIndices, setRecentChordIndices] = useState<number[]>([]);
+  const [recentChordTypes, setRecentChordTypes] = useState<string[]>([]);
 
   // Fetch chords based on selected difficulty
   const { data: chords, isLoading, isError } = useQuery({
@@ -32,6 +34,89 @@ export default function Game() {
     toggleNoteSelection,
     playChord,
   } = usePiano();
+
+  // Get current chord
+  const currentChord: ChordData | undefined = chords && chords.length > 0 
+    ? chords[currentChordIndex] 
+    : undefined;
+    
+  // Generate a new random chord - avoid repeating recent chords
+  const generateNewChord = useCallback(() => {
+    if (chords && chords.length > 0) {
+      // We'll avoid repeating the last 10 chords
+      const avoidCount = Math.min(10, Math.floor(chords.length / 2));
+      
+      let newIndex;
+      let attempts = 0;
+      const maxAttempts = 20; // Prevent infinite loop in edge cases
+      let chordOk = false;
+      
+      do {
+        newIndex = Math.floor(Math.random() * chords.length);
+        attempts++;
+        
+        // Check that the chord isn't in the recent history
+        const indexIsOk = !recentChordIndices.includes(newIndex);
+        
+        // Check that we don't have more than 2 of same chord type in a row
+        const potentialChord = chords[newIndex];
+        // Extract the chord type from the name (e.g., "C", "Cm", "Caug")
+        // This is a simplified version since we can't access the pattern object directly
+        let chordType = '';
+        if (potentialChord) {
+          const name = potentialChord.name;
+          // Check for chord type by looking at the name suffix
+          if (name.includes('aug')) chordType = 'augmented';
+          else if (name.includes('dim')) chordType = 'diminished';
+          else if (name.includes('sus')) chordType = 'suspended';
+          else if (name.includes('m ')) chordType = 'minor';
+          else chordType = 'major';
+        }
+        
+        // If we have already seen 2 of the same type in a row, this one must be different
+        const typeIsOk = !(
+          recentChordTypes.length >= 2 && 
+          recentChordTypes[0] === chordType && 
+          recentChordTypes[1] === chordType
+        );
+        
+        chordOk = indexIsOk && typeIsOk;
+        
+      } while (
+        attempts < maxAttempts && 
+        !chordOk && 
+        chords.length > avoidCount
+      );
+      
+      // Update the recent chord indices
+      setRecentChordIndices(prev => {
+        const updated = [newIndex, ...prev.slice(0, avoidCount - 1)];
+        return updated;
+      });
+      
+      // Update the recent chord types
+      const newChord = chords[newIndex];
+      if (newChord) {
+        // Extract chord type again
+        let chordType = '';
+        const name = newChord.name;
+        if (name.includes('aug')) chordType = 'augmented';
+        else if (name.includes('dim')) chordType = 'diminished';
+        else if (name.includes('sus')) chordType = 'suspended';
+        else if (name.includes('m ')) chordType = 'minor';
+        else chordType = 'major';
+        
+        setRecentChordTypes(prev => {
+          const updated = [chordType, ...prev.slice(0, 2)];
+          return updated;
+        });
+      }
+      
+      setCurrentChordIndex(newIndex);
+      clearSelectedNotes();
+      setShowFeedback(false);
+    }
+  }, [chords, recentChordIndices, recentChordTypes, clearSelectedNotes]);
 
   // Function to handle playing the current chord
   const handlePlayChord = useCallback(() => {
@@ -141,95 +226,6 @@ export default function Game() {
       setCurrentChordIndex(randomIndex);
     }
   }, [chords, difficulty]);
-
-  // Get current chord
-  const currentChord: ChordData | undefined = chords && chords.length > 0 
-    ? chords[currentChordIndex] 
-    : undefined;
-
-  // Keep track of recently used chord indices and types (to prevent repetitive chords)
-  const [recentChordIndices, setRecentChordIndices] = useState<number[]>([]);
-  const [recentChordTypes, setRecentChordTypes] = useState<string[]>([]);
-  
-  // Generate a new random chord - avoid repeating recent chords
-  const generateNewChord = useCallback(() => {
-    if (chords && chords.length > 0) {
-      // We'll avoid repeating the last 10 chords
-      const avoidCount = Math.min(10, Math.floor(chords.length / 2));
-      
-      let newIndex;
-      let attempts = 0;
-      const maxAttempts = 20; // Prevent infinite loop in edge cases
-      let chordOk = false;
-      
-      do {
-        newIndex = Math.floor(Math.random() * chords.length);
-        attempts++;
-        
-        // Check that the chord isn't in the recent history
-        const indexIsOk = !recentChordIndices.includes(newIndex);
-        
-        // Check that we don't have more than 2 of same chord type in a row
-        const potentialChord = chords[newIndex];
-        // Extract the chord type from the name (e.g., "C", "Cm", "Caug")
-        // This is a simplified version since we can't access the pattern object directly
-        let chordType = '';
-        if (potentialChord) {
-          const name = potentialChord.name;
-          // Check for chord type by looking at the name suffix
-          if (name.includes('aug')) chordType = 'augmented';
-          else if (name.includes('dim')) chordType = 'diminished';
-          else if (name.includes('sus')) chordType = 'suspended';
-          else if (name.includes('m ')) chordType = 'minor';
-          else chordType = 'major';
-        }
-        
-        // If we have already seen 2 of the same type in a row, this one must be different
-        const typeIsOk = !(
-          recentChordTypes.length >= 2 && 
-          recentChordTypes[0] === chordType && 
-          recentChordTypes[1] === chordType
-        );
-        
-        chordOk = indexIsOk && typeIsOk;
-        
-      } while (
-        attempts < maxAttempts && 
-        !chordOk && 
-        chords.length > avoidCount
-      );
-      
-      // Update the recent chord indices
-      setRecentChordIndices(prev => {
-        const updated = [newIndex, ...prev.slice(0, avoidCount - 1)];
-        return updated;
-      });
-      
-      // Update the recent chord types
-      const newChord = chords[newIndex];
-      if (newChord) {
-        // Extract chord type again
-        let chordType = '';
-        const name = newChord.name;
-        if (name.includes('aug')) chordType = 'augmented';
-        else if (name.includes('dim')) chordType = 'diminished';
-        else if (name.includes('sus')) chordType = 'suspended';
-        else if (name.includes('m ')) chordType = 'minor';
-        else chordType = 'major';
-        
-        setRecentChordTypes(prev => {
-          const updated = [chordType, ...prev.slice(0, 2)];
-          return updated;
-        });
-      }
-      
-      setCurrentChordIndex(newIndex);
-      clearSelectedNotes();
-      setShowFeedback(false);
-    }
-  }, [chords, recentChordIndices, recentChordTypes, clearSelectedNotes]);
-
-  // These functions are defined with useCallback above
 
   return (
     <div className="bg-neutral-light min-h-screen font-inter text-neutral-dark">

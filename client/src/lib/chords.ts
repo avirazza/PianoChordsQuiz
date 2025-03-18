@@ -114,28 +114,28 @@ export const chordPatterns: ChordPattern[] = [
     display: "",
     intervals: [-8, 0, 3],
     inversion: 1,
-    inversionDisplay: "1st inversion",
+    inversionDisplay: "1st inv",
   },
   {
     type: "minor",
     display: "m",
     intervals: [-9, 0, 4],
     inversion: 1,
-    inversionDisplay: "1st inversion",
+    inversionDisplay: "1st inv",
   },
   {
     type: "augmented",
     display: "aug",
     intervals: [-8, 0, 4],
     inversion: 1,
-    inversionDisplay: "1st inversion",
+    inversionDisplay: "1st inv",
   },
   {
     type: "diminished",
     display: "dim",
     intervals: [-9, 0, 3],
     inversion: 1,
-    inversionDisplay: "1st inversion",
+    inversionDisplay: "1st inv",
   },
 
   // Second inversions
