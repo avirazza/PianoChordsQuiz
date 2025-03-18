@@ -146,12 +146,15 @@ const Piano: React.FC<PianoProps> = ({ selectedNotes, onNoteClick }) => {
   
   // Setup MIDI Input with type casting for TypeScript compatibility
   useEffect(() => {
-    if ('requestMIDIAccess' in navigator) {
+    // Check for secure context (HTTPS or localhost)
+    const isSecureContext = window.isSecureContext;
+    
+    if (isSecureContext && 'requestMIDIAccess' in navigator) {
       setMidiStatus(prev => ({ ...prev, supported: true }));
       
       // Use 'any' type to bypass TypeScript type checking since MIDI interfaces are complex
       const nav = navigator as any;
-      nav.requestMIDIAccess()
+      nav.requestMIDIAccess({ sysex: false })
         .then((midiAccess: any) => {
           // Check connected devices
           const inputs = midiAccess.inputs.values();
@@ -206,10 +209,15 @@ const Piano: React.FC<PianoProps> = ({ selectedNotes, onNoteClick }) => {
           }));
         });
     } else {
-      console.log('Web MIDI API not supported in this browser');
+      if (!isSecureContext) {
+        console.log('Web MIDI API requires a secure context (HTTPS or localhost)');
+      } else {
+        console.log('Web MIDI API not supported in this browser');
+      }
+      
       setMidiStatus(prev => ({ 
         ...prev, 
-        supported: false, 
+        supported: isSecureContext && 'requestMIDIAccess' in navigator, 
         connected: false 
       }));
     }
@@ -311,9 +319,9 @@ const Piano: React.FC<PianoProps> = ({ selectedNotes, onNoteClick }) => {
           <div className="text-neutral-dark/70">
             {!midiStatus.supported ? (
               <div>
-                <p className="text-red-500 font-semibold">MIDI not supported in this browser</p>
+                <p className="text-red-500 font-semibold">MIDI not supported</p>
                 <p className="text-xs mt-1">
-                  To use MIDI, try Chrome or Edge browser with "chrome://flags/#enable-web-midi" enabled
+                  MIDI requires HTTPS or localhost in Chrome/Edge with "chrome://flags/#enable-web-midi" enabled
                 </p>
               </div>
             ) : midiStatus.connected ? (
@@ -322,7 +330,7 @@ const Piano: React.FC<PianoProps> = ({ selectedNotes, onNoteClick }) => {
               <div>
                 <p>Connect a MIDI keyboard to use it with this app</p>
                 <p className="text-xs mt-1">
-                  If your keyboard is already connected but not detected, try reconnecting the USB cable
+                  Make sure your keyboard is connected and refresh the page. If it doesn't work, try a secure (HTTPS) connection.
                 </p>
               </div>
             )}

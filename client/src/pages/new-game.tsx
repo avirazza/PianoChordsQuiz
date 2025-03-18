@@ -52,81 +52,99 @@ export default function Game() {
     
   // Generate a new random chord - avoid repeating recent chords
   const generateNewChord = useCallback(() => {
-    if (chords && chords.length > 0) {
-      // We'll avoid repeating the last 10 chords
-      const avoidCount = Math.min(10, Math.floor(chords.length / 2));
+    if (!chords || chords.length === 0) return;
+    
+    // Determine cooldown length based on difficulty level
+    // Level 1 has a cooldown of 6, all other levels have a cooldown of 10
+    const cooldownLength = difficulty === 'level1' ? 6 : 10;
+    
+    // Create a list of valid chord indices (those not in recent history)
+    const validChordIndices = [];
+    const validChordTypes = new Map(); // Map to group indices by chord type
+    
+    for (let i = 0; i < chords.length; i++) {
+      // Skip chords that were recently used (in cooldown)
+      if (recentChordIndices.includes(i)) continue;
       
-      let newIndex;
-      let attempts = 0;
-      const maxAttempts = 20; // Prevent infinite loop in edge cases
-      let chordOk = false;
+      // Extract chord type from the name
+      const chordName = chords[i].name;
+      let chordType = '';
       
-      do {
-        newIndex = Math.floor(Math.random() * chords.length);
-        attempts++;
-        
-        // Check that the chord isn't in the recent history
-        const indexIsOk = !recentChordIndices.includes(newIndex);
-        
-        // Check that we don't have more than 2 of same chord type in a row
-        const potentialChord = chords[newIndex];
-        // Extract the chord type from the name (e.g., "C", "Cm", "Caug")
-        // This is a simplified version since we can't access the pattern object directly
-        let chordType = '';
-        if (potentialChord) {
-          const name = potentialChord.name;
-          // Check for chord type by looking at the name suffix
-          if (name.includes('aug')) chordType = 'augmented';
-          else if (name.includes('dim')) chordType = 'diminished';
-          else if (name.includes('sus')) chordType = 'suspended';
-          else if (name.includes('m ')) chordType = 'minor';
-          else chordType = 'major';
-        }
-        
-        // If we have already seen 2 of the same type in a row, this one must be different
-        const typeIsOk = !(
-          recentChordTypes.length >= 2 && 
-          recentChordTypes[0] === chordType && 
-          recentChordTypes[1] === chordType
-        );
-        
-        chordOk = indexIsOk && typeIsOk;
-        
-      } while (
-        attempts < maxAttempts && 
-        !chordOk && 
-        chords.length > avoidCount
-      );
+      if (chordName.includes('aug')) chordType = 'augmented';
+      else if (chordName.includes('dim')) chordType = 'diminished';
+      else if (chordName.includes('sus')) chordType = 'suspended';
+      else if (chordName.includes('m ')) chordType = 'minor';
+      else chordType = 'major';
       
-      // Update the recent chord indices
-      setRecentChordIndices(prev => {
-        const updated = [newIndex, ...prev.slice(0, avoidCount - 1)];
-        return updated;
-      });
+      // Add to our list of valid chords
+      validChordIndices.push(i);
       
-      // Update the recent chord types
-      const newChord = chords[newIndex];
-      if (newChord) {
-        // Extract chord type again
-        let chordType = '';
-        const name = newChord.name;
-        if (name.includes('aug')) chordType = 'augmented';
-        else if (name.includes('dim')) chordType = 'diminished';
-        else if (name.includes('sus')) chordType = 'suspended';
-        else if (name.includes('m ')) chordType = 'minor';
-        else chordType = 'major';
-        
-        setRecentChordTypes(prev => {
-          const updated = [chordType, ...prev.slice(0, 2)];
-          return updated;
-        });
+      // Group by chord type
+      if (!validChordTypes.has(chordType)) {
+        validChordTypes.set(chordType, []);
       }
-      
-      setCurrentChordIndex(newIndex);
-      clearSelectedNotes();
-      setShowFeedback(false);
+      validChordTypes.get(chordType)?.push(i);
     }
-  }, [chords, recentChordIndices, recentChordTypes, clearSelectedNotes]);
+    
+    // Check if we have more than 2 of the same chord type in a row
+    // If so, we need to filter out that chord type from our valid indices
+    let filteredIndices = [...validChordIndices];
+    
+    if (recentChordTypes.length >= 2 && 
+        recentChordTypes[0] === recentChordTypes[1]) {
+      // We already have 2 of the same type in a row, must pick a different type
+      filteredIndices = validChordIndices.filter(idx => {
+        const chord = chords[idx];
+        const name = chord.name;
+        let type = '';
+        
+        if (name.includes('aug')) type = 'augmented';
+        else if (name.includes('dim')) type = 'diminished';
+        else if (name.includes('sus')) type = 'suspended';
+        else if (name.includes('m ')) type = 'minor';
+        else type = 'major';
+        
+        return type !== recentChordTypes[0];
+      });
+    }
+    
+    // If no valid chords remain after filtering (rare edge case),
+    // fall back to the original valid indices
+    if (filteredIndices.length === 0) {
+      filteredIndices = validChordIndices;
+      console.log("Warning: Had to use a third consecutive chord of the same type");
+    }
+    
+    // Select a random chord from the filtered list
+    const randomIndex = Math.floor(Math.random() * filteredIndices.length);
+    const newChordIndex = filteredIndices[randomIndex];
+    
+    // Update the recent chord indices (for cooldown tracking)
+    setRecentChordIndices(prev => {
+      return [newChordIndex, ...prev.slice(0, cooldownLength - 1)];
+    });
+    
+    // Update the recent chord types (for max 2-in-a-row tracking)
+    const newChord = chords[newChordIndex];
+    if (newChord) {
+      let chordType = '';
+      const name = newChord.name;
+      
+      if (name.includes('aug')) chordType = 'augmented';
+      else if (name.includes('dim')) chordType = 'diminished';
+      else if (name.includes('sus')) chordType = 'suspended';
+      else if (name.includes('m ')) chordType = 'minor';
+      else chordType = 'major';
+      
+      setRecentChordTypes(prev => {
+        return [chordType, ...prev.slice(0, 2)];
+      });
+    }
+    
+    setCurrentChordIndex(newChordIndex);
+    clearSelectedNotes();
+    setShowFeedback(false);
+  }, [chords, difficulty, recentChordIndices, recentChordTypes, clearSelectedNotes]);
 
   // Function to handle playing the current chord
   const handlePlayChord = useCallback(() => {

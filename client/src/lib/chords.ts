@@ -86,8 +86,12 @@ export const chordPatterns: ChordPattern[] = [
 function generateChordName(pattern: ChordPattern, rootNum: number): string {
   const rootName = getRootName(rootNum);
   
-  // For inversions, use "1st inv" and "2nd inv" notation
-  if (pattern.inversion > 0) {
+  // For inversions, use the inversionDisplay property if available
+  if (pattern.inversion > 0 && pattern.inversionDisplay) {
+    return `${rootName}${pattern.display} ${pattern.inversionDisplay}`;
+  }
+  // Fallback for inversions without inversionDisplay property
+  else if (pattern.inversion > 0) {
     // First inversion
     if (pattern.inversion === 1) {
       return `${rootName}${pattern.display} 1st inv`;
