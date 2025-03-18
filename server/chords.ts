@@ -47,6 +47,9 @@ export interface ChordPattern {
   display: string;
   intervals: number[];
   inversion: number;
+  // Mapping of interval positions to scale degrees
+  // For example, in a major triad [0, 4, 7], the scaleDegrees would be { 0: "1", 4: "3", 7: "5" }
+  scaleDegreeMap: Record<number, string>;
 }
 
 // Helper function to get inversion display text

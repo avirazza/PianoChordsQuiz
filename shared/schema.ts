@@ -57,4 +57,9 @@ export type ChordData = {
   notes: string[];        // Note string representation for backward compatibility
   noteNumbers: number[];  // Numeric note representation (1=C, 2=C#, ..., 12=B)
   difficulty: DifficultyLevel;
+  rootNote: number;       // The numeric root note (1=C, 2=C#, etc.)
+  scaleDegrees: {         // Map of note positions in the chord to scale degrees
+    [noteIndex: number]: string; // e.g., "1" (root), "3" (third), "5" (fifth), "7" (seventh)
+  };
+  inversion: number;      // 0=root position, 1=first inversion, 2=second inversion, etc.
 };
