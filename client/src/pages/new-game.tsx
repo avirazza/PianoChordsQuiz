@@ -284,7 +284,9 @@ export default function Game() {
                       <option value="level4">Level 4: All 12 Keys (Maj/Min/Aug/Dim)</option>
                       <option value="level5">Level 5: First Inversions</option>
                       <option value="level6">Level 6: Second Inversions</option>
-                      <option value="level7">Level 7: All Chords Review</option>
+                      <option value="level7">Level 7: All Triads & Inversions</option>
+                      <option value="level8">Level 8: Basic 7th Chords</option>
+                      <option value="level9">Level 9: Advanced 7th Chords</option>
                     </select>
                     <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-neutral-dark">
                       <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
