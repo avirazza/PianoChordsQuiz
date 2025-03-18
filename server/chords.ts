@@ -122,7 +122,31 @@ export const chordPatterns: ChordPattern[] = [
   { type: "halfdiminished7", display: "m7b5", intervals: [0, 3, 6, 10], inversion: 0 },
   { type: "halfdiminished7", display: "m7b5", intervals: [0, 3, 7, 9], inversion: 1 },
   { type: "halfdiminished7", display: "m7b5", intervals: [0, 4, 6, 9], inversion: 2 },
-  { type: "halfdiminished7", display: "m7b5", intervals: [0, 2, 5, 8], inversion: 3 }
+  { type: "halfdiminished7", display: "m7b5", intervals: [0, 2, 5, 8], inversion: 3 },
+  
+  // Minor with Major 7th chords (mMaj7)
+  { type: "minorMajor7", display: "mMaj7", intervals: [0, 3, 7, 11], inversion: 0 },
+  { type: "minorMajor7", display: "mMaj7", intervals: [0, 4, 8, 9], inversion: 1 },
+  { type: "minorMajor7", display: "mMaj7", intervals: [0, 4, 5, 8], inversion: 2 },
+  { type: "minorMajor7", display: "mMaj7", intervals: [0, 1, 4, 9], inversion: 3 },
+  
+  // Diminished with Major 7th (dimMaj7)
+  { type: "diminishedMajor7", display: "dimMaj7", intervals: [0, 3, 6, 11], inversion: 0 },
+  { type: "diminishedMajor7", display: "dimMaj7", intervals: [0, 3, 8, 9], inversion: 1 },
+  { type: "diminishedMajor7", display: "dimMaj7", intervals: [0, 5, 6, 9], inversion: 2 },
+  { type: "diminishedMajor7", display: "dimMaj7", intervals: [0, 1, 4, 7], inversion: 3 },
+  
+  // Augmented with Minor 7th (aug7)
+  { type: "augmentedMinor7", display: "aug7", intervals: [0, 4, 8, 10], inversion: 0 },
+  { type: "augmentedMinor7", display: "aug7", intervals: [0, 4, 6, 8], inversion: 1 },
+  { type: "augmentedMinor7", display: "aug7", intervals: [0, 2, 4, 8], inversion: 2 },
+  { type: "augmentedMinor7", display: "aug7", intervals: [0, 2, 6, 10], inversion: 3 },
+  
+  // Augmented with Major 7th (augMaj7)
+  { type: "augmentedMajor7", display: "augMaj7", intervals: [0, 4, 8, 11], inversion: 0 },
+  { type: "augmentedMajor7", display: "augMaj7", intervals: [0, 4, 7, 8], inversion: 1 },
+  { type: "augmentedMajor7", display: "augMaj7", intervals: [0, 3, 4, 8], inversion: 2 },
+  { type: "augmentedMajor7", display: "augMaj7", intervals: [0, 1, 5, 9], inversion: 3 }
 ];
 
 // All roots from 1 to 12
