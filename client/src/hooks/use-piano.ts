@@ -29,7 +29,11 @@ export function usePiano() {
   // Handle MIDI note on message
   const onMIDIMessage = useCallback((event: WebMidi.MIDIMessageEvent) => {
     const currentSynth = initSynth();
-    const [command, note, velocity] = event.data;
+    // Convert Uint8Array to regular array to fix iteration issues
+    const data = Array.from(event.data);
+    const command = data[0];
+    const note = data[1];
+    const velocity = data[2];
     
     // Note on with velocity > 0
     if (command === 144 && velocity > 0) {
@@ -66,8 +70,12 @@ export function usePiano() {
           setMidiEnabled(true);
 
           // Set up listeners for MIDI inputs
-          for (const input of access.inputs.values()) {
-            input.onmidimessage = onMIDIMessage;
+          const inputs = access.inputs.values();
+          let input = inputs.next();
+          while (!input.done) {
+            // Type assertion to handle missing property in type definition
+            (input.value as any).onmidimessage = onMIDIMessage;
+            input = inputs.next();
           }
 
           // Listen for connection/disconnection of MIDI devices
@@ -75,7 +83,8 @@ export function usePiano() {
             const port = event.port;
             if (port.type === 'input') {
               if (port.state === 'connected') {
-                port.onmidimessage = onMIDIMessage;
+                // Type assertion to handle missing property in type definition
+                (port as any).onmidimessage = onMIDIMessage;
               }
             }
           };
@@ -92,8 +101,12 @@ export function usePiano() {
     // Cleanup MIDI connections on unmount
     return () => {
       if (midiAccess) {
-        for (const input of midiAccess.inputs.values()) {
-          input.onmidimessage = null;
+        const inputs = midiAccess.inputs.values();
+        let input = inputs.next();
+        while (!input.done) {
+          // Type assertion to handle missing property in type definition
+          (input.value as any).onmidimessage = null;
+          input = inputs.next();
         }
       }
     };
