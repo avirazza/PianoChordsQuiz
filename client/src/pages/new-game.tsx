@@ -205,12 +205,39 @@ export default function Game() {
       // Generate new chord after delay
       setTimeout(generateNewChord, 1500);
     } else {
-      setFeedbackMessage("Not quite right. Try again!");
+      // Provide more detailed feedback when answer is incorrect
+      let feedbackMsg = "Not quite right. ";
+      
+      // Check if we have the target chord data for more detailed feedback
+      if (result.targetChord) {
+        // See if the first note (bass note) is wrong - common for inversion errors
+        if (selectedNotes.length > 0 && currentChord.notes.length > 0) {
+          const selectedBassNote = selectedNotes[0].replace(/[0-9]/g, ""); // Remove octave
+          const targetBassNote = currentChord.notes[0].replace(/[0-9]/g, ""); // Remove octave
+          
+          if (selectedBassNote !== targetBassNote) {
+            // If bass note is wrong, it might be an inversion issue
+            if (result.targetChord.inversion > 0) {
+              feedbackMsg += `Check the inversion - this is a ${result.targetChord.name}.`;
+            } else {
+              feedbackMsg += "Check your bass note.";
+            }
+          } else {
+            feedbackMsg += "Some notes aren't quite right.";
+          }
+        } else {
+          feedbackMsg += "Try again!";
+        }
+      } else {
+        feedbackMsg += "Try again!";
+      }
+      
+      setFeedbackMessage(feedbackMsg);
       
       // Clear feedback after delay
       setTimeout(() => {
         setShowFeedback(false);
-      }, 2000);
+      }, 3000); // Slightly longer delay for more complex feedback
     }
   }, [currentChord, selectedNotes, score, difficulty, generateNewChord]);
 
