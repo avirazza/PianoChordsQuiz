@@ -43,12 +43,17 @@ export default function Game() {
   // Generate a new random chord - avoid repeating recent chords
   const generateNewChord = useCallback(() => {
     if (chords && chords.length > 0) {
-      // We'll avoid repeating the last 10 chords
-      const avoidCount = Math.min(10, Math.floor(chords.length / 2));
+      // Create different avoidCount based on difficulty:
+      // Level 1 uses shorter history (6 chords) since there are fewer chords
+      // Other levels use longer history (10 chords) for more variety
+      const avoidCount = 
+        difficulty === "level1" 
+          ? Math.min(6, Math.floor(chords.length / 2))
+          : Math.min(10, Math.floor(chords.length / 2));
       
       let newIndex;
       let attempts = 0;
-      const maxAttempts = 20; // Prevent infinite loop in edge cases
+      const maxAttempts = 30; // Increase attempts to avoid warning about consecutive same type
       let chordOk = false;
       
       do {
@@ -88,6 +93,12 @@ export default function Game() {
         chords.length > avoidCount
       );
       
+      // If we couldn't find a suitable chord after max attempts, just use a random one
+      // but log a warning (this should be rare)
+      if (!chordOk && attempts >= maxAttempts) {
+        console.log("Warning: Had to use a third consecutive chord of the same type");
+      }
+      
       // Update the recent chord indices
       setRecentChordIndices(prev => {
         const updated = [newIndex, ...prev.slice(0, avoidCount - 1)];
@@ -116,7 +127,7 @@ export default function Game() {
       clearSelectedNotes();
       setShowFeedback(false);
     }
-  }, [chords, recentChordIndices, recentChordTypes, clearSelectedNotes]);
+  }, [chords, difficulty, recentChordIndices, recentChordTypes, clearSelectedNotes]);
 
   // Function to handle playing the current chord
   const handlePlayChord = useCallback(() => {

@@ -283,7 +283,7 @@ let idCounter = 1;
 // For inversions, use all 12 notes as well
 const allRoots = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 // Define which roots and patterns to use for each difficulty level
-const rootsLevel1 = [1, 6, 8]; // C, F, G, plus D, E, A for minors)
+const rootsLevel1 = [1, 3, 5, 6, 8, 10, 12]; // C, D, E, F, G, A, B (white keys only)
 const rootsLevel2 = allRoots;
 const rootsLevel3 = [1, 3, 5, 6, 8, 10, 12]; // C, D, E, F, G, A, B (white keys)
 const rootsLevel4 = allRoots;
@@ -325,18 +325,7 @@ rootsLevel1.forEach((rootNum) => {
   }
 });
 
-// Add D minor, E minor
-const minorPattern = chordPatterns.find(
-  (p) => p.type === "minor" && p.inversion === 0,
-);
-if (minorPattern) {
-  chordsByDifficulty["level1"].push(
-    createChordDef(3, minorPattern, idCounter++, "level1"),
-  ); // D minor
-  chordsByDifficulty["level1"].push(
-    createChordDef(5, minorPattern, idCounter++, "level1"),
-  ); // E minor
-}
+// Don't need to add specific minor chords as we're now using all white keys in rootsLevel1
 
 // Level 2: Major and minor triads with white key roots only
 const whiteKeyRoots = [1, 3, 5, 6, 8, 10, 12]; // C, D, E, F, G, A, B
