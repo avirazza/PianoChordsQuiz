@@ -84,14 +84,28 @@ export default function Game() {
   const handleSubmit = () => {
     if (!currentChord) return;
     
-    // Check if selected notes match chord notes
-    const correctNotes = new Set(currentChord.notes);
-    const userNotes = new Set(selectedNotes);
+    // Normalize notes to compare chord quality regardless of octave
+    const normalizeNote = (noteStr: string): string => {
+      // Extract just the note name (C, C#, D, etc.) without the octave
+      return noteStr.replace(/[0-9]/g, '');
+    };
+    
+    // Get the notes from the expected chord without octave numbers
+    const correctNoteNames = currentChord.notes.map(normalizeNote);
+    
+    // Get the notes from user selection without octave numbers
+    const userNoteNames = selectedNotes.map(normalizeNote);
+    
+    // Check if the user selected the right chord quality (regardless of octave)
+    // First, convert to sets to eliminate duplicates
+    const correctNoteNameSet = new Set(correctNoteNames);
+    const userNoteNameSet = new Set(userNoteNames);
     
     let correct = false;
     
-    if (correctNotes.size === userNotes.size) {
-      correct = Array.from(correctNotes).every(note => userNotes.has(note));
+    // Check if the user has selected the correct notes (just the note names, not octaves)
+    if (correctNoteNameSet.size === userNoteNameSet.size) {
+      correct = Array.from(correctNoteNameSet).every(note => userNoteNameSet.has(note));
     }
     
     setIsCorrect(correct);
@@ -123,7 +137,18 @@ export default function Game() {
   // Play the current chord
   const handlePlayChord = () => {
     if (currentChord) {
+      // Always play original reference chord
       playChord(currentChord.notes);
+      
+      // Provide visual feedback by highlighting the correct notes
+      // This doesn't force the user to use the same octave
+      clearSelectedNotes();
+      
+      // Briefly show the reference chord notes
+      setTimeout(() => {
+        // Clear the highlight after a short delay
+        clearSelectedNotes();
+      }, 1000);
     }
   };
 

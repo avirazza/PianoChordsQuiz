@@ -62,10 +62,28 @@ const Key: React.FC<KeyProps> = ({
     const whiteKeyPosition = octaveOffset + baseNoteIndex * (keyWidth + keyGap);
     
     // Width of black keys
-    const blackWidth = keyWidth * 0.6;
+    const blackWidth = keyWidth * 0.55; // Slightly narrower black keys
     
-    // Center black key at the right edge of its white key
-    const position = whiteKeyPosition + keyWidth - (blackWidth / 2);
+    // Position black keys based on note type
+    let position;
+    
+    // Apply slight adjustments to each black key type for visual alignment
+    if (note === 'C#') {
+      // C# needs to be slightly right of center between C and D
+      position = whiteKeyPosition + keyWidth - (blackWidth * 0.45);
+    } else if (note === 'D#') {
+      // D# needs to be slightly left of center between D and E
+      position = whiteKeyPosition + keyWidth * 2 - (blackWidth * 0.55);
+    } else if (note === 'F#') {
+      // F# needs to be slightly right of center between F and G
+      position = whiteKeyPosition + keyWidth - (blackWidth * 0.45);
+    } else if (note === 'G#') {
+      // G# needs to be slightly in center between G and A
+      position = whiteKeyPosition + keyWidth * 2 - (blackWidth * 0.5);
+    } else if (note === 'A#') {
+      // A# needs to be slightly left of center between A and B
+      position = whiteKeyPosition + keyWidth * 2 - (blackWidth * 0.55);
+    }
     
     style.left = `${position}px`;
     style.width = `${blackWidth}px`;
