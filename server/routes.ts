@@ -83,7 +83,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const chordVerifySchema = z.object({
         userNotes: z.array(z.string()),
-        targetNotes: z.array(z.string())
+        targetNotes: z.array(z.string()),
+        chordId: z.number().optional() // Optional chord ID for more precise verification
       });
       
       const result = chordVerifySchema.safeParse(req.body);
@@ -95,10 +96,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      const { userNotes, targetNotes } = result.data;
-      const isMatch = checkChordMatch(userNotes, targetNotes);
+      const { userNotes, targetNotes, chordId } = result.data;
       
-      res.json({ isMatch });
+      // If a chord ID is provided, fetch the complete chord data for enhanced verification
+      let targetChord;
+      if (chordId) {
+        const allChords = await storage.getAllChords();
+        targetChord = allChords.find(chord => chord.id === chordId);
+      }
+      
+      // Use the enhanced chord match function which can utilize scale degrees
+      const isMatch = checkChordMatch(userNotes, targetNotes, targetChord);
+      
+      // Return the match result and the target chord data for client reference
+      res.json({ 
+        isMatch,
+        targetChord: targetChord || null
+      });
     } catch (error) {
       res.status(500).json({ error: "Failed to verify chord match" });
     }

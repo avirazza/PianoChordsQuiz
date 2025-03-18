@@ -149,15 +149,32 @@ export default function Game() {
   const handleSubmit = useCallback(async () => {
     if (!currentChord) return;
     
-    // Use the server-side API for chord matching
-    // This handles the mathematical approach to chord matching
-    const correct = await verifyChordMatch(selectedNotes, currentChord.notes);
+    // Use the enhanced server-side API for chord matching
+    // This handles the mathematical approach with scale degree tracking
+    const result = await verifyChordMatch(
+      selectedNotes, 
+      currentChord.notes,
+      currentChord.id
+    );
     
-    setIsCorrect(correct);
+    const correct = result.isMatch;
+    setIsCorrect(Boolean(correct));
     setShowFeedback(true);
     
     if (correct) {
-      setFeedbackMessage("Correct! Well done!");
+      // Access the scale degrees if available in the response
+      const scaleDegrees = result.targetChord?.scaleDegrees;
+      let successMessage = "Correct! Well done!";
+      
+      // Display extra info about scale degrees if available
+      if (scaleDegrees) {
+        const rootDegree = Object.values(scaleDegrees).find(deg => deg === "1");
+        if (rootDegree) {
+          successMessage += ` You found the root note correctly!`;
+        }
+      }
+      
+      setFeedbackMessage(successMessage);
       setScore(prevScore => prevScore + 10);
       
       // Submit score to the backend

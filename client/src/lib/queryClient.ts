@@ -41,18 +41,40 @@ export const getQueryFn: <T>(options: {
     return await res.json();
   };
 
+// Interface for enhanced chord verification response
+interface ChordVerificationResponse {
+  isMatch: boolean;
+  targetChord?: {
+    id: number;
+    name: string;
+    rootNote: number;
+    scaleDegrees: Record<number, string>;
+    inversion: number;
+    [key: string]: any; // For any other properties in the ChordData type
+  } | null;
+}
+
 // Function to verify chord matching via the server API
-export async function verifyChordMatch(userNotes: string[], targetNotes: string[]): Promise<boolean> {
+export async function verifyChordMatch(
+  userNotes: string[], 
+  targetNotes: string[],
+  chordId?: number
+): Promise<ChordVerificationResponse> {
   try {
     const response = await apiRequest("POST", "/api/verify-chord", {
       userNotes,
-      targetNotes
+      targetNotes,
+      chordId  // Optional chord ID for enhanced verification
     });
+    
     const data = await response.json();
-    return data.isMatch;
+    return {
+      isMatch: data.isMatch,
+      targetChord: data.targetChord
+    };
   } catch (error) {
     console.error("Error verifying chord match:", error);
-    return false;
+    return { isMatch: false, targetChord: null };
   }
 }
 
